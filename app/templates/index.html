@@ -81,12 +81,29 @@
 </div>
 
 <script>
+// ============================================================
+// 用户唯一标识 — 存储在 localStorage，每个用户独立
+// ============================================================
+function getUserId() {
+    let userId = localStorage.getItem("gzhu_user_session_id");
+    if (!userId) {
+        // 生成 UUID v4
+        userId = crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+        localStorage.setItem("gzhu_user_session_id", userId);
+    }
+    return userId;
+}
+
 // 页面加载时获取欢迎消息
 window.onload = async function() {
     try {
         let response = await fetch("/welcome", {
             method: "POST",
-            headers: {"Content-Type": "application/json"}
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({session_id: getUserId()})
         });
         let data = await response.json();
         addBotMessage(data.reply);
@@ -113,7 +130,10 @@ async function sendMessage() {
         let response = await fetch("/chat", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({message: text})
+            body: JSON.stringify({
+                message: text,
+                session_id: getUserId()
+            })
         });
         let data = await response.json();
         addBotMessage(data.reply);
