@@ -107,21 +107,25 @@ llm = create_llm()
 
 
 def intent_node(state: State):
-    prompt = f"""你是一个意图分类器。根据用户输入，只返回以下三个词之一：
+    prompt = f"""你是一个意图分类器。根据用户输入，只返回以下词之一：
     - update_profile：用户表达了个人兴趣、目标、计划、专业背景、喜好（如"我喜欢..."、"我想..."、"我计划..."），需要记录到用户画像。
     - recommend：用户在寻求建议、推荐导师、方向或资源（前提是画像已更新或无需更新）。
     - show_profile:用户提及查看画像及其类似语义。
-    - chat：普通闲聊、问候、或无法归入以上三类的问题。
+    - explore：用户表示迷茫、不知道喜欢什么、想了解各个方向、让系统介绍研究方向（如"我不知道喜欢什么"、"给我介绍一下方向"、"有哪些方向"、"我不知道选什么"）。
+    - reset_profile：用户想重置/清空画像（如"重置我的画像"、"清空画像"、"重新开始"）。
+    - chat：普通闲聊、问候、或无法归入以上几类的问题。
     分类规则：
     1. 如果用户输入包含个人信息（兴趣、目标、专业等），即使看起来像问句，也优先返回 update_profile。
     2. 只有明确在要求推荐时，才返回 recommend。
-    3、如果用户说：查看画像、我的画像、看看我的兴趣、当前画像、查看用户画像，返回：show_profile
+    3. 如果用户说：查看画像、我的画像、看看我的兴趣、当前画像、查看用户画像，返回：show_profile
+    4. 如果用户表示迷茫、想了解方向、让系统介绍，返回：explore
+    5. 如果用户说：重置画像、清空画像、重新开始、删除画像，返回：reset_profile
     用户输入：{state['user_input']}
 
     只返回一个词，不要解释。"""
     response = llm.invoke(prompt)
     intent = response.content.strip().lower()
-    if intent not in ("show_profile", "update_profile", "recommend", "chat"):
+    if intent not in ("show_profile", "update_profile", "recommend", "chat", "explore", "reset_profile"):
         intent = "chat"
     print("\n意图识别：", intent)
     return {"intent": intent}
@@ -195,6 +199,10 @@ def compute_composite(score, positive_count, negative_count, last_update):
 def update_profile(profile, message):
     profile_info = extract_profile(message)
     now = datetime.now().strftime("%Y-%m-%d")
+
+    # 删除阈值：当 composite_score 低于此值时移除该标签
+    REMOVAL_THRESHOLD = -0.5
+
     for item in profile_info.get("interests", []):
         name = item["name"]
         weight = item.get("weight", 1.0)
@@ -223,6 +231,9 @@ def update_profile(profile, message):
                 entry["negative_count"],
                 entry["last_update"]
             )
+            # 如果 composite_score 低于阈值，移除该标签
+            if entry["composite_score"] < REMOVAL_THRESHOLD:
+                del profile["interest"][name]
     for item in profile_info.get("goals", []):
         name = item["name"]
         weight = item.get("weight", 1.0)
@@ -251,6 +262,9 @@ def update_profile(profile, message):
                 entry["negative_count"],
                 entry["last_update"]
             )
+            # 如果 composite_score 低于阈值，移除该标签
+            if entry["composite_score"] < REMOVAL_THRESHOLD:
+                del profile["goal"][name]
     profile["history"].append({"time": now, "message": message, "update": profile_info})
     profile["history"] = profile["history"][-50:]
     return profile, profile_info  # 返回提取结果，用于动态确认
@@ -548,6 +562,51 @@ def welcome_node(state: State):
     }
 
 
+def explore_node(state: State):
+    """当学生表示迷茫、想了解方向时，LLM 主动介绍各研究方向"""
+    interest_names = [NAME_MAP.get(k, k) for k in INTEREST_MAP.keys()]
+    goal_names = [NAME_MAP.get(k, k) for k in GOAL_MAP.keys()]
+
+    prompt = f"""你是广州大学机械与电气工程学院的学长/学姐，热情、亲切。
+用户表示迷茫，不知道自己喜欢什么方向，请你用一段话（约200-300字）：
+1. 先安慰用户，告诉ta大一迷茫很正常
+2. 简要介绍学院的主要研究方向，让用户有个大致了解：
+   {', '.join(interest_names)}
+3. 介绍可能的未来目标方向：
+   {', '.join(goal_names)}
+4. 鼓励用户说说哪个方向听起来有意思，或者聊聊平时的兴趣爱好
+要求：语气亲切自然，像学长/学姐在聊天，不要像机器人一样生硬。"""
+    response = llm.invoke(prompt)
+
+    messages = state.get("messages", []) + [
+        HumanMessage(content=state["user_input"]),
+        AIMessage(content=response.content)
+    ]
+    return {
+        "response": response.content,
+        "messages": messages
+    }
+
+
+def reset_profile_node(state: State):
+    """重置用户画像"""
+    session_id = state.get("session_id", "default")
+    # 清空画像
+    empty_profile = {"interest": {}, "goal": {}, "history": []}
+    save_profile(empty_profile, session_id)
+
+    reply = "已为您清空所有画像信息，我们可以重新开始！请告诉我您的兴趣方向吧 😊"
+    messages = state.get("messages", []) + [
+        HumanMessage(content=state["user_input"]),
+        AIMessage(content=reply)
+    ]
+    return {
+        "response": reply,
+        "messages": messages,
+        "user_profile": empty_profile
+    }
+
+
 def chat_node(state: State):
     # 聊天节点维护消息
     messages = state.get("messages", [])
@@ -572,6 +631,8 @@ def build_graph():
     builder.add_node("confirm_profile", confirm_profile_node)
     builder.add_node("show_profile", show_profile_summary_node)
     builder.add_node("recommend", recommend_node)
+    builder.add_node("explore", explore_node)
+    builder.add_node("reset_profile", reset_profile_node)
     builder.add_node("chat", chat_node)
 
     builder.set_entry_point("intent")
@@ -579,12 +640,16 @@ def build_graph():
                                   {"show_profile": "show_profile",
                                    "update_profile": "profile",
                                    "recommend": "recommend",
+                                   "explore": "explore",
+                                   "reset_profile": "reset_profile",
                                    "chat": "chat"})
     builder.add_edge("profile", "confirm_profile")
     builder.add_edge("confirm_profile", END)
     builder.add_edge("recommend", END)
     builder.add_edge("chat", END)
     builder.add_edge("show_profile", END)
+    builder.add_edge("explore", END)
+    builder.add_edge("reset_profile", END)
 
     return builder.compile()
 
