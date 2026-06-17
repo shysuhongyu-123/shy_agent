@@ -1,0 +1,659 @@
+import os
+import sys
+from typing import TypedDict
+from datetime import datetime
+from langgraph.graph import StateGraph, END
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, AIMessage
+import json
+
+from pyexpat.errors import messages
+
+from app.retriever import recommend_teachers
+from app.profile_db import (
+    load_profile as db_load_profile,
+    save_profile as db_save_profile,
+    add_history as db_add_history,
+    check_recent_history as db_check_recent_history
+)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+# 从环境变量读取 API Key（PythonAnywhere 上通过 Web 面板设置）
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
+if not DEEPSEEK_API_KEY:
+    raise ValueError(
+        "请设置环境变量 DEEPSEEK_API_KEY。\n"
+        "本地开发：在终端执行 set DEEPSEEK_API_KEY=你的密钥\n"
+        "PythonAnywhere：在 Web 面板的 Environment variables 中添加"
+    )
+os.environ["DEEPSEEK_API_KEY"] = DEEPSEEK_API_KEY
+
+# ============================================================
+# 画像标签定义（基于广州大学机械与电气工程学院实际研究方向）
+# ============================================================
+
+# 兴趣标签（研究方向）
+INTEREST_MAP = {
+    "robotics": "机器人",
+    "control": "机械控制",
+    "ai": "人工智能",
+    "vision": "计算机视觉",
+    "embedded": "嵌入式",
+    "smart_manufacturing": "智能制造",
+    "fault_diagnosis": "故障诊断",
+    "mechanical_design": "机械设计",
+    "micro_nano": "微纳制造",
+    "vehicle": "车辆工程",
+    "materials": "材料工程",
+    "mechanics": "力学",
+    "sensing": "传感检测",
+    "power_electronics": "电力电子",
+    "smart_grid": "智能电网",
+    "iot": "物联网",
+    "additive_manufacturing": "增材制造",
+    "fluid_mechanics": "流体力学",
+    "precision_drive": "精密驱动"
+}
+
+# 目标标签（职业/学业规划）
+GOAL_MAP = {
+    "employment": "就业",
+    "master": "考研",
+    "phd": "读博",
+    "competition": "竞赛",
+    "entrepreneurship": "创业",
+    "research": "科研"
+}
+
+# 中文名称映射（用于显示）
+NAME_MAP = {}
+NAME_MAP.update(INTEREST_MAP)
+NAME_MAP.update(GOAL_MAP)
+
+
+class Profile(TypedDict):
+    interest: dict
+    goal: dict
+    history: list
+
+
+class State(TypedDict):
+    messages: list[HumanMessage | AIMessage]   # 短期记忆
+    user_input: str            # 当前输入
+    intent: str                # 当前意图
+    user_profile: Profile      # 长期特征
+    analysis_result: dict      # 多agent分析结果
+    approval: bool             # 导师是否审核通过
+    response: str              # 助手回复
+    next_step: str             # 流程位置
+    session_id: str            # 会话ID，用于多用户隔离
+
+
+def create_llm():
+    return ChatOpenAI(
+        model="deepseek-chat",
+        base_url="https://api.deepseek.com",
+        api_key=DEEPSEEK_API_KEY,
+        temperature=0.7,
+        max_tokens=2048
+    )
+
+
+llm = create_llm()
+
+
+def intent_node(state: State):
+    prompt = f"""你是一个意图分类器。根据用户输入，只返回以下三个词之一：
+    - update_profile：用户表达了个人兴趣、目标、计划、专业背景、喜好（如"我喜欢..."、"我想..."、"我计划..."），需要记录到用户画像。
+    - recommend：用户在寻求建议、推荐导师、方向或资源（前提是画像已更新或无需更新）。
+    - show_profile:用户提及查看画像及其类似语义。
+    - chat：普通闲聊、问候、或无法归入以上三类的问题。
+    分类规则：
+    1. 如果用户输入包含个人信息（兴趣、目标、专业等），即使看起来像问句，也优先返回 update_profile。
+    2. 只有明确在要求推荐时，才返回 recommend。
+    3、如果用户说：查看画像、我的画像、看看我的兴趣、当前画像、查看用户画像，返回：show_profile
+    用户输入：{state['user_input']}
+
+    只返回一个词，不要解释。"""
+    response = llm.invoke(prompt)
+    intent = response.content.strip().lower()
+    if intent not in ("show_profile", "update_profile", "recommend", "chat"):
+        intent = "chat"
+    print("\n意图识别：", intent)
+    return {"intent": intent}
+
+
+def load_profile(session_id: str = "default") -> dict:
+    """从 SQLite 数据库加载用户画像"""
+    return db_load_profile(session_id)
+
+
+def save_profile(profile: dict, session_id: str = "default"):
+    """保存用户画像到 SQLite 数据库"""
+    db_save_profile(session_id, profile)
+
+
+def extract_profile(message):
+    # 构建兴趣标签列表供 LLM 参考
+    interest_options = ", ".join([f"{k}({v})" for k, v in INTEREST_MAP.items()])
+    goal_options = ", ".join([f"{k}({v})" for k, v in GOAL_MAP.items()])
+
+    prompt = f"""
+提取用户画像信息：
+用户输入:
+{message}
+
+可用的兴趣标签（interest）只能是以下之一：
+{interest_options}
+
+可用的目标标签（goal）只能是以下之一：
+{goal_options}
+
+规则：
+1. 支持一次消息提到多个兴趣/目标
+2. 支持正负权重：
+   - "非常喜欢/喜欢/有兴趣/感兴趣/想学" => 正权重 0.2~1.0
+   - "不喜欢/不想/减少兴趣/没兴趣/不考虑" => 负权重 -0.2~-1.0
+   - "不想就业/放弃就业/不考虑就业" => employment:-1
+3. 输出格式必须严格如下 JSON：
+{{
+  "interests": [
+    {{"name":"robotics","weight":1.0}},
+    {{"name":"ai","weight":0.8}}
+  ],
+  "goals": [
+    {{"name":"phd","weight":1.0}}
+  ]
+}}
+4. 如果消息没有提到兴趣或目标，则返回空数组
+5. 只返回 JSON，不要解释、不要额外文本
+"""
+    response = llm.invoke(prompt)
+    print("\n画像结果")
+    print(response.content)
+    try:
+        return json.loads(response.content)
+    except Exception as e:
+        print("JSON解析失败：", e)
+        return {
+            "interests": [],
+            "goals": []
+        }
+
+
+def compute_composite(score, positive_count, negative_count, last_update):
+    days_diff = (datetime.now() - datetime.strptime(last_update, "%Y-%m-%d")).days
+    decay = max(0.1, min(1.0, pow(0.98, days_diff)))
+    composite = (score * 0.6 + positive_count * 0.3 - negative_count * 0.2) * decay
+    return round(composite, 2)
+
+
+def update_profile(profile, message):
+    profile_info = extract_profile(message)
+    now = datetime.now().strftime("%Y-%m-%d")
+    for item in profile_info.get("interests", []):
+        name = item["name"]
+        weight = item.get("weight", 1.0)
+        is_positive = weight >= 0
+        if name not in profile["interest"]:
+            profile["interest"][name] = {
+                "score": weight,
+                "count": 1,
+                "positive_count": 1 if is_positive else 0,
+                "negative_count": 0 if is_positive else 1,
+                "last_update": now,
+                "composite_score": weight
+            }
+        else:
+            entry = profile["interest"][name]
+            entry["score"] += weight
+            entry["count"] += 1
+            if is_positive:
+                entry["positive_count"] += 1
+            else:
+                entry["negative_count"] += 1
+            entry["last_update"] = now
+            entry["composite_score"] = compute_composite(
+                entry["score"],
+                entry["positive_count"],
+                entry["negative_count"],
+                entry["last_update"]
+            )
+    for item in profile_info.get("goals", []):
+        name = item["name"]
+        weight = item.get("weight", 1.0)
+        is_positive = weight >= 0
+        if name not in profile["goal"]:
+            profile["goal"][name] = {
+                "score": weight,
+                "count": 1,
+                "positive_count": 1 if is_positive else 0,
+                "negative_count": 0 if is_positive else 1,
+                "last_update": now,
+                "composite_score": weight
+            }
+        else:
+            entry = profile["goal"][name]
+            entry["score"] += weight
+            entry["count"] += 1
+            if is_positive:
+                entry["positive_count"] += 1
+            else:
+                entry["negative_count"] += 1
+            entry["last_update"] = now
+            entry["composite_score"] = compute_composite(
+                entry["score"],
+                entry["positive_count"],
+                entry["negative_count"],
+                entry["last_update"]
+            )
+    profile["history"].append({"time": now, "message": message, "update": profile_info})
+    profile["history"] = profile["history"][-50:]
+    return profile, profile_info  # 返回提取结果，用于动态确认
+
+
+def profile_node(state: State):
+    profile, profile_info = update_profile(state["user_profile"], state["user_input"])
+    print("\n画像更新后:")
+    print(profile)
+    # 将提取的信息暂存到 analysis_result，供 confirm 使用
+    return {
+        "user_profile": profile,
+        "analysis_result": profile_info  # 包含 interests / goals 列表
+    }
+
+
+def confirm_profile_node(state: State):
+    """根据实际更新的内容生成确认语"""
+    info = state.get("analysis_result", {})
+    interests = info.get("interests", [])
+    goals = info.get("goals", [])
+
+    parts = []
+    if interests:
+        names = [NAME_MAP.get(i["name"], i["name"]) for i in interests]
+        parts.append("兴趣：" + "、".join(names))
+    if goals:
+        names = [NAME_MAP.get(g["name"], g["name"]) for g in goals]
+        parts.append("目标：" + "、".join(names))
+
+    if parts:
+        confirm_text = "好的，我已记录您的" + "，".join(parts) + "。"
+    else:
+        confirm_text = "好的，我已记录您的偏好。"
+
+    # 维护消息列表
+    messages = state.get("messages", []) + [
+        HumanMessage(content=state["user_input"]),
+        AIMessage(content=confirm_text)
+    ]
+
+    return {
+        "response": confirm_text,
+        "messages": messages
+    }
+
+
+def get_sorted_profile(profile_dict):
+    return sorted(
+        profile_dict.items(),
+        key=lambda x: x[1].get("composite_score", 0),
+        reverse=True
+    )
+
+
+def build_profile_summary(profile):
+    interests = get_sorted_profile(profile["interest"])
+    goals = get_sorted_profile(profile["goal"])
+    # 翻译为中文
+    interest_text = [f"{NAME_MAP.get(name, name)}({data['composite_score']})" for name, data in interests]
+    goals_text = [f"{NAME_MAP.get(name, name)}({data['composite_score']})" for name, data in goals]
+    return f"""
+    用户兴趣排序：
+    {", ".join(interest_text)}
+    用户目标排序：
+    {", ".join(goals_text)}"""
+
+
+def get_top_items(items_dict, top_n=2):
+    sorted_items = sorted(items_dict.items(), key=lambda x: x[1].get("composite_score", 0), reverse=True)
+    return sorted_items[:top_n]
+
+
+def get_latest_update(history):
+    if not history:
+        return None
+    for record in reversed(history):
+        if record["update"]["interests"] or record["update"]["goals"]:
+            return record
+    return None
+
+
+def build_profile_brief(profile):
+    """生成中文摘要，用于推荐 prompt"""
+    if not profile:
+        return "用户画像空"
+    interests = get_top_items(profile.get("interest", {}))
+    goals = get_top_items(profile.get("goal", {}))
+    latest_update = get_latest_update(profile.get("history", []))
+    history_count = len(profile.get("history", []))
+
+    text = "用户画像\n\n"
+    text += "核心兴趣：\n"
+    if interests:
+        for idx, (name, data) in enumerate(interests, 1):
+            text += f"① {NAME_MAP.get(name, name)} ({data.get('composite_score', 0)})\n"
+    else:
+        text += "暂无兴趣\n"
+    text += "\n当前目标：\n"
+    if goals:
+        for idx, (name, data) in enumerate(goals, 1):
+            text += f"① {NAME_MAP.get(name, name)} ({data.get('composite_score', 0)})\n"
+    else:
+        text += "暂无目标\n"
+    text += "\n最近更新：\n"
+    if latest_update:
+        text += f"{latest_update['message']}\n"
+    else:
+        text += "暂无更新记录\n"
+    text += f"\n历史交互：{history_count}条\n"
+    user_tendencies = []
+    if interests:
+        user_tendencies.append(" ".join([NAME_MAP.get(name, name) for name, _ in interests]))
+    if goals:
+        user_tendencies.append(" ".join([NAME_MAP.get(name, name) for name, _ in goals]))
+    if user_tendencies:
+        text += "\n用户倾向：\n" + "、".join(user_tendencies)
+    return text
+
+
+def show_profile_summary_node(state: State):
+    # 从数据库读取最新的画像数据，确保展示的是持久化的最新内容
+    session_id = state.get("session_id", "default")
+    profile = load_profile(session_id)
+
+    interests = get_sorted_profile(profile["interest"])
+    goals = get_sorted_profile(profile["goal"])
+
+    interest_text = "\n".join([
+        f"{NAME_MAP.get(name, name)}（{data['composite_score']}）"
+        for name, data in interests[:3]
+    ])
+
+    goal_text = "\n".join([
+        f"{NAME_MAP.get(name, name)}（{data['composite_score']}）"
+        for name, data in goals[:3]
+    ])
+
+    prompt = f"""
+你是一名用户画像分析专家。用户兴趣：{interest_text}用户目标：{goal_text}请生成：核心兴趣：xxx说明：xxx目标：xxx说明：xxx要求：
+1 中文输出
+2 不超过200字
+3 像导师分析学生一样
+4 不要出现JSON
+5 不要出现编号
+"""
+    response = llm.invoke(prompt)
+
+    # 维护消息
+    messages = state.get("messages", []) + [
+        HumanMessage(content=state["user_input"]),
+        AIMessage(content=response.content)
+    ]
+
+    return {
+        "response": response.content,
+        "messages": messages
+    }
+
+
+def recommend_node(state: State):
+    # 从数据库读取最新的画像数据，确保推荐基于持久化的最新画像
+    session_id = state.get("session_id", "default")
+    profile = load_profile(session_id)
+
+    # 1. 检索
+    teachers = recommend_teachers(profile, top_n=5)
+
+    if not teachers:
+        reply = "抱歉，暂时没有匹配到合适的导师。"
+        messages = state.get("messages", []) + [
+            HumanMessage(content=state["user_input"]),
+            AIMessage(content=reply)
+        ]
+        return {"response": reply, "messages": messages}
+
+    # 2. 构建安全列表（姓名由数据保证）
+    teacher_list = []
+    for idx, t in enumerate(teachers, 1):
+        teacher_list.append(
+            f"导师{idx}\n"
+            f"姓名：{t['name']}\n"
+            f"匹配度：{t['score']}\n"
+            f"研究方向：{', '.join(t.get('research', []))}\n"
+            f"课程：{', '.join(t.get('courses', []))}\n"
+            f"邮箱：{t.get('email', '')}\n"
+            f"主页：{t.get('homepage', '')}\n"
+        )
+    teacher_text = "\n".join(teacher_list)
+
+    profile_summary = build_profile_brief(profile)
+
+    # 3. 让 LLM 生成一段总体推荐说明（不要求列出姓名）
+    prompt = f"""
+    你是广州大学机械与电气工程学院的导师推荐专家。
+    根据用户画像，请为以下候选导师写一段约150字的推荐说明，说明这些导师为什么适合该学生。
+    不要单独列出导师，只进行总体分析。语言亲切、专业。
+
+    用户画像摘要：
+    {profile_summary}
+
+    候选导师（供参考）：
+    {teacher_text}
+
+    请生成推荐说明：
+    """
+    analysis = llm.invoke(prompt).content
+
+    # 4. 拼接最终回复
+    final_reply = f"为你找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}"
+    messages = state.get("messages", []) + [
+        HumanMessage(content=state["user_input"]),
+        AIMessage(content=final_reply)
+    ]
+    return {
+        "response": final_reply,
+        "messages": messages
+    }
+
+
+def build_welcome_prompt(profile):
+    """根据画像状态生成引导性欢迎词"""
+    interests = profile.get("interest", {})
+    goals = profile.get("goal", {})
+    history = profile.get("history", [])
+
+    has_interests = len(interests) > 0
+    has_goals = len(goals) > 0
+    has_history = len(history) > 0
+
+    # 构建兴趣列表供引导
+    interest_names = [NAME_MAP.get(k, k) for k in INTEREST_MAP.keys()]
+    goal_names = [NAME_MAP.get(k, k) for k in GOAL_MAP.keys()]
+
+    if not has_interests and not has_goals:
+        # 新用户，完全无画像
+        prompt = f"""你是广州大学机械与电气工程学院的智能导师推荐助手，热情、亲切、专业。
+这是用户第一次与你对话，用户还没有任何画像信息。
+请用一段热情友好的欢迎语（约100-150字）引导用户介绍自己，包括：
+1. 欢迎来到广州大学机械与电气工程学院导师推荐系统
+2. 引导用户说说自己的兴趣方向（可列举一些方向供参考：{", ".join(interest_names)}）
+3. 引导用户说说自己的未来目标（可列举：{", ".join(goal_names)}）
+4. 告诉用户可以随时说"查看我的画像"查看已记录的信息，"推荐导师"获取导师推荐
+要求：语气亲切自然，像学长/学姐在聊天，不要像机器人一样生硬。"""
+    elif has_interests and not has_goals:
+        # 有兴趣但无目标
+        interest_summary = "、".join([NAME_MAP.get(k, k) for k in interests.keys()])
+        prompt = f"""你是广州大学机械与电气工程学院的智能导师推荐助手，热情、亲切、专业。
+用户已有兴趣方向：{interest_summary}，但还没有设定目标。
+请用一段友好的话（约80-120字）：
+1. 肯定用户已有的兴趣
+2. 引导用户说说未来的目标（如：{", ".join(goal_names)}）
+3. 告诉用户可以随时说"查看我的画像"或"推荐导师"
+要求：语气亲切自然，像学长/学姐在聊天。"""
+    elif not has_interests and has_goals:
+        # 有目标但无兴趣
+        goal_summary = "、".join([NAME_MAP.get(k, k) for k in goals.keys()])
+        prompt = f"""你是广州大学机械与电气工程学院的智能导师推荐助手，热情、亲切、专业。
+用户已有目标：{goal_summary}，但还没有记录兴趣方向。
+请用一段友好的话（约80-120字）：
+1. 肯定用户已有的目标
+2. 引导用户说说感兴趣的研究方向（如：{", ".join(interest_names)}）
+3. 告诉用户可以随时说"查看我的画像"或"推荐导师"
+要求：语气亲切自然，像学长/学姐在聊天。"""
+    else:
+        # 已有完整画像
+        interest_summary = "、".join([NAME_MAP.get(k, k) for k in interests.keys()])
+        goal_summary = "、".join([NAME_MAP.get(k, k) for k in goals.keys()])
+        prompt = f"""你是广州大学机械与电气工程学院的智能导师推荐助手，热情、亲切、专业。
+用户已有画像信息：
+- 兴趣方向：{interest_summary}
+- 目标：{goal_summary}
+请用一段友好的话（约60-100字）：
+1. 简要回顾用户的画像
+2. 询问是否需要推荐导师，或者继续更新画像
+3. 告诉用户可以随时说"查看我的画像"或"推荐导师"
+要求：语气亲切自然，像学长/学姐在聊天。"""
+    return prompt
+
+
+def welcome_node(state: State):
+    """系统启动时的欢迎节点，生成引导性欢迎词"""
+    session_id = state.get("session_id", "default")
+    profile = load_profile(session_id)
+    prompt = build_welcome_prompt(profile)
+    response = llm.invoke(prompt)
+    welcome_text = response.content
+
+    # 将欢迎词作为第一条 AI 消息
+    messages = [AIMessage(content=welcome_text)]
+
+    return {
+        "response": welcome_text,
+        "messages": messages
+    }
+
+
+def chat_node(state: State):
+    # 聊天节点维护消息
+    messages = state.get("messages", [])
+    messages.append(HumanMessage(content=state["user_input"]))
+    response = llm.invoke(messages)
+    messages.append(AIMessage(content=response.content))
+
+    return {
+        "response": response.content,
+        "messages": messages
+    }
+
+
+def router(state):
+    return state["intent"]
+
+
+def build_graph():
+    builder = StateGraph(State)
+    builder.add_node("intent", intent_node)
+    builder.add_node("profile", profile_node)
+    builder.add_node("confirm_profile", confirm_profile_node)
+    builder.add_node("show_profile", show_profile_summary_node)
+    builder.add_node("recommend", recommend_node)
+    builder.add_node("chat", chat_node)
+
+    builder.set_entry_point("intent")
+    builder.add_conditional_edges("intent", router,
+                                  {"show_profile": "show_profile",
+                                   "update_profile": "profile",
+                                   "recommend": "recommend",
+                                   "chat": "chat"})
+    builder.add_edge("profile", "confirm_profile")
+    builder.add_edge("confirm_profile", END)
+    builder.add_edge("recommend", END)
+    builder.add_edge("chat", END)
+    builder.add_edge("show_profile", END)
+
+    return builder.compile()
+
+
+graph = build_graph()
+
+
+def run_agent(user_input, messages=None, session_id="default"):
+    if messages is None:
+        messages = []
+
+    result = graph.invoke({
+        "messages": messages,
+        "user_input": user_input,
+        "intent": "",
+        "user_profile": load_profile(session_id),
+        "analysis_result": {},
+        "approval": False,
+        "response": "",
+        "next_step": "",
+        "session_id": session_id
+    })
+
+    # 获取最新的画像（优先使用 result 中更新过的，否则从数据库读取）
+    profile = load_profile(session_id)
+
+    # 将本次对话记录到数据库（无论什么 intent 都记录）
+    # 检查是否已经记录过这条消息（避免重复记录）
+    already_recorded = db_check_recent_history(session_id, user_input)
+    if not already_recorded:
+        db_add_history(
+            session_id=session_id,
+            message=user_input,
+            intent=result.get("intent", "chat"),
+            response=result.get("response", ""),
+            update_data=result.get("analysis_result", {})
+        )
+
+    # 如果画像有更新（profile 节点执行过），保存到数据库
+    if result.get("intent") == "update_profile":
+        save_profile(result.get("user_profile", profile), session_id)
+
+    return result["response"], result.get("messages", messages)
+
+
+def get_welcome_message(session_id="default"):
+    """生成系统启动时的欢迎引导消息"""
+    profile = load_profile(session_id)
+    prompt = build_welcome_prompt(profile)
+    response = llm.invoke(prompt)
+    return response.content
+
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("  广州大学机械与电气工程学院 — 智能导师推荐系统")
+    print("=" * 60)
+    print()
+    messages = []
+    # 生成欢迎引导消息
+    welcome = get_welcome_message()
+    print(f"🤖 {welcome}")
+    print()
+    messages = [AIMessage(content=welcome)]
+
+    while True:
+        user_input = input("👤 请说（输入 exit 退出）：")
+        if user_input.lower() in ["exit", "quit"]:
+            print("👋 再见！")
+            break
+        response, messages = run_agent(user_input, messages)
+        print(f"\n🤖 {response}\n")

@@ -1,0 +1,598 @@
+/* ============================================================
+   广州大学机械与电气工程学院 — 导师推荐系统
+   现代化 UI 样式
+   ============================================================ */
+
+/* 基础重置 */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #1a237e;
+    --primary-light: #283593;
+    --primary-dark: #0d1b5e;
+    --accent: #448aff;
+    --accent-light: #82b1ff;
+    --bg-gradient-start: #0f0c29;
+    --bg-gradient-mid: #302b63;
+    --bg-gradient-end: #24243e;
+    --sidebar-bg: rgba(26, 35, 126, 0.95);
+    --chat-bg: #f0f2f5;
+    --bubble-user: linear-gradient(135deg, #1a237e, #3949ab);
+    --bubble-bot: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #666;
+    --text-light: #999;
+    --border-color: #e8eaed;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.15);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* ============================================================
+   主容器 - 左右分栏布局
+   ============================================================ */
+.app-container {
+    width: 100%;
+    max-width: 1200px;
+    height: 90vh;
+    display: flex;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   左侧边栏
+   ============================================================ */
+.sidebar {
+    width: 280px;
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    padding: 30px 24px;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(68, 138, 255, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 32px;
+    position: relative;
+    z-index: 1;
+}
+
+.logo {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 4px 15px rgba(68, 138, 255, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 4px 15px rgba(68, 138, 255, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(68, 138, 255, 0.5); }
+}
+
+.logo i {
+    font-size: 28px;
+    color: white;
+}
+
+.sidebar-header h2 {
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+/* 侧边栏信息卡片 */
+.sidebar-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.info-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.info-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(4px);
+}
+
+.info-card i {
+    font-size: 20px;
+    color: var(--accent-light);
+    width: 24px;
+    text-align: center;
+}
+
+.info-card span {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+}
+
+/* 侧边栏底部提示 */
+.sidebar-footer {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+}
+
+.tip-card {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+}
+
+.tip-card i {
+    font-size: 24px;
+    color: var(--accent-light);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.tip-text strong {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.tip-text p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    line-height: 1.8;
+    font-style: italic;
+}
+
+/* ============================================================
+   右侧主聊天区
+   ============================================================ */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--chat-bg);
+    min-width: 0;
+}
+
+/* 聊天头部 */
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-left i {
+    font-size: 22px;
+    color: var(--primary);
+}
+
+.header-left span {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4caf50;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.status-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ============================================================
+   聊天消息区域
+   ============================================================ */
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: var(--chat-bg);
+}
+
+.chat-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+    background: #c0c4cc;
+    border-radius: 3px;
+}
+
+.chat-box::-webkit-scrollbar-thumb:hover {
+    background: #a0a4ac;
+}
+
+/* 消息通用样式 */
+.message {
+    display: flex;
+    flex-direction: column;
+    max-width: 80%;
+    animation: messageSlide 0.3s ease;
+}
+
+@keyframes messageSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 用户消息 - 右对齐 */
+.message.user {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.message.user .message-content {
+    order: 1;
+}
+
+.message.user .message-meta {
+    order: 0;
+    margin-bottom: 4px;
+}
+
+/* 机器人消息 - 左对齐 */
+.message.bot {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.message.bot .message-content {
+    order: 1;
+}
+
+.message.bot .message-meta {
+    order: 0;
+    margin-bottom: 4px;
+}
+
+/* 消息元信息（头像+时间） */
+.message-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.message.user .message-meta {
+    flex-direction: row-reverse;
+}
+
+.message-meta i {
+    font-size: 20px;
+}
+
+.message.user .message-meta i {
+    color: var(--primary);
+}
+
+.message.bot .message-meta i {
+    color: var(--accent);
+}
+
+.message-meta .time {
+    font-size: 11px;
+    color: var(--text-light);
+}
+
+/* 气泡 */
+.bubble {
+    padding: 14px 18px;
+    border-radius: var(--radius-lg);
+    font-size: 14px;
+    line-height: 1.7;
+    word-break: break-word;
+    white-space: pre-wrap;
+    position: relative;
+}
+
+.message.user .bubble {
+    background: var(--bubble-user);
+    color: white;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(26, 35, 126, 0.2);
+}
+
+.message.bot .bubble {
+    background: var(--bubble-bot);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   输入区域
+   ============================================================ */
+.input-area {
+    padding: 16px 24px 20px;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--chat-bg);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 4px;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--accent);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(68, 138, 255, 0.1);
+}
+
+.input-wrapper textarea {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    outline: none;
+    min-height: 24px;
+    max-height: 120px;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+.input-wrapper textarea::placeholder {
+    color: var(--text-light);
+}
+
+.input-wrapper button {
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.input-wrapper button:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3);
+}
+
+.input-wrapper button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.input-wrapper button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.input-wrapper button i {
+    font-size: 16px;
+}
+
+/* 快捷输入标签 */
+.input-tips {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.tip {
+    padding: 5px 12px;
+    background: var(--chat-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.tip:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(68, 138, 255, 0.2);
+}
+
+/* ============================================================
+   响应式设计
+   ============================================================ */
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+
+    .app-container {
+        height: 100vh;
+        border-radius: 0;
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 16px 20px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 0;
+        width: 100%;
+    }
+
+    .logo {
+        width: 40px;
+        height: 40px;
+        margin: 0;
+    }
+
+    .logo i {
+        font-size: 18px;
+    }
+
+    .sidebar-header h2 {
+        font-size: 15px;
+    }
+
+    .subtitle {
+        display: none;
+    }
+
+    .sidebar-info {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .info-card {
+        padding: 8px 12px;
+        flex: 1;
+        min-width: 100px;
+    }
+
+    .info-card i {
+        font-size: 14px;
+    }
+
+    .info-card span {
+        font-size: 12px;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    .input-area {
+        padding: 12px 16px 16px;
+    }
+
+    .input-tips {
+        gap: 6px;
+    }
+
+    .tip {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+}

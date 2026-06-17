@@ -1,0 +1,1522 @@
+[
+    {
+        "name": "张春良",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/2426.htm",
+        "research": [
+            "设备状态监测与故障诊断",
+            "数控技术",
+            "机器人",
+            "振动控制"
+        ],
+        "email": "zhangcl@gzhu.edu.cn",
+        "courses": [
+            "机械控制原理",
+            "数控技术与CAM",
+            "专业导论等"
+        ]
+    },
+    {
+        "name": "向建化",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/3957.htm",
+        "research": [],
+        "email": "xiangjh@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "朱大昌",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/4357.htm",
+        "research": [
+            "多尺度结构拓扑优化",
+            "超材料微纳机构构型综合与优化"
+        ],
+        "email": "zdc98998@gzhu.edu.cn",
+        "courses": [
+            "主讲硕士研究生课程《高等机构学》",
+            "《机械故障诊断学》",
+            "《专家系统》",
+            "《机电一体化系统设计》",
+            "《现代控制理论》等。主讲本科生《机器人学》",
+            "《智能控制技术》",
+            "《自动控制原理》",
+            "《机械工程控制基础》",
+            "《传感器》等。"
+        ]
+    },
+    {
+        "name": "江帆",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/2421.htm",
+        "research": [],
+        "email": "jd@gzhu.edu.cn",
+        "courses": [
+            "机械原理",
+            "机械前沿技术I",
+            "机械创新与发明",
+            "创新与发明",
+            "有限元技术等",
+            "其中机械原理",
+            "机械创新与发明",
+            "创新与发明为广东省一流课程。"
+        ]
+    },
+    {
+        "name": "李方义",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/6937.htm",
+        "research": [
+            "吸能结构耐撞性设计与优化",
+            "新型材料与结构",
+            "复杂装备不确定性分析与可靠性设计"
+        ],
+        "email": "lfy703@sina.com",
+        "courses": [
+            "主讲硕士研究生课程《计算方法》",
+            "主讲本科生课程《理论力学》",
+            "《机械可靠性设计》",
+            "《汽车制造工艺学》",
+            "《汽车构造》",
+            "《汽车市场营销》。"
+        ]
+    },
+    {
+        "name": "刘征",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/6927.htm",
+        "research": [
+            "风电装备可靠性",
+            "可靠性数字孪生",
+            "智能运维"
+        ],
+        "email": "liuzheng@gzhu.edu.cn",
+        "courses": [
+            "《机械设计》《机械可靠性设计》《机械创新与发明》等"
+        ]
+    },
+    {
+        "name": "赖添茂",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/5057.htm",
+        "research": [
+            "微纳粘着与摩擦"
+        ],
+        "email": "laitianmao@163.com",
+        "courses": [
+            "《机械设计基础》",
+            "《智能传感与检测技术》",
+            "《机械控制原理》等"
+        ]
+    },
+    {
+        "name": "朱萍玉",
+        "homepage": "https://jd.gzhu.edu.cn/info/1096/4684.htm",
+        "research": [
+            "先进传感与系统集成",
+            "智能制造与智能运维"
+        ],
+        "email": "pyzhu@gzhu.edu.cn",
+        "courses": [
+            "《测试技术》",
+            "《智能传感与检测技术》",
+            "《传感器技术》",
+            "《无损检测技术》",
+            "《机械故障诊断技术》",
+            "《专业导论》等"
+        ]
+    },
+    {
+        "name": "陶子渝",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/6357.htm",
+        "research": [],
+        "email": "ziyu.tao@gzhu.edu.cn",
+        "courses": [
+            "《机械制图II》（本科生）"
+        ]
+    },
+    {
+        "name": "欧阳海滨",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4800.htm",
+        "research": [
+            "◆研究方向一: 计算智能及多目标优化算法研究及其应用"
+        ],
+        "email": "oyhb1987@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "郑永锋",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4627.htm",
+        "research": [
+            "先进结构拓扑优化",
+            "智能材料微结构拓扑优化"
+        ],
+        "email": "hnzyf08@gzhu.edu.cn",
+        "courses": [
+            "《画法几何与机械制图》"
+        ]
+    },
+    {
+        "name": "王洪鑫",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4239.htm",
+        "research": [
+            "仿生机器人",
+            "外骨骼机器人",
+            "张拉整体结构",
+            "非线性动力学与结构优化设计"
+        ],
+        "email": "wanghx@gzhu.edu.cn",
+        "courses": [
+            "材料力学",
+            "机械设计基础",
+            "机械振动"
+        ]
+    },
+    {
+        "name": "黄家乐",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4238.htm",
+        "research": [
+            "微结构精密制造",
+            "仿生结构设计"
+        ],
+        "email": "jialehuang@gzhu.edu.cn",
+        "courses": [
+            "工程制图",
+            "机械制造技术",
+            "现代信息技术应用"
+        ]
+    },
+    {
+        "name": "李萍",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4686.htm",
+        "research": [
+            "微纳制造",
+            "微光电子器件(芯片)热管理与热控制"
+        ],
+        "email": "leeping@gzhu.edu.cn",
+        "courses": [
+            "《工程材料》",
+            "《机械表面技术》",
+            "《工程摩擦学》",
+            "《机械制图》等"
+        ]
+    },
+    {
+        "name": "王一军",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/2496.htm",
+        "research": [
+            "失效分析",
+            "计算机图像识别",
+            "计算机辅助设计"
+        ],
+        "email": "wangyj67@sina.com",
+        "courses": []
+    },
+    {
+        "name": "陶建华",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4637.htm",
+        "research": [
+            "CAD/CAM集成技术"
+        ],
+        "email": "jhtao@163.net",
+        "courses": []
+    },
+    {
+        "name": "徐保强",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4636.htm",
+        "research": [],
+        "email": "xubao2002@163.com",
+        "courses": [
+            "1",
+            "《现代设备管理》"
+        ]
+    },
+    {
+        "name": "王文龙",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4633.htm",
+        "research": [
+            "机器视觉",
+            "无损检测",
+            "生物医学工程"
+        ],
+        "email": "wlwang@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "区嘉洁",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4632.htm",
+        "research": [
+            "清洁燃料汽车发动机舱流场优化控制",
+            "混合动力电动汽车电子控制技术",
+            "动力电池舱热管理"
+        ],
+        "email": "jd@gzhu.edu.cn",
+        "courses": [
+            "先后担任《机械原理》",
+            "《单片机技术》",
+            "《C语言程序设计》",
+            "&laquo",
+            "汽车电器设备与控制系统&raquo",
+            "&laquo",
+            "汽车检测与诊断技术&raquo",
+            "&laquo",
+            "工程材料&raquo",
+            "&laquo",
+            "材料力学&raquo",
+            "&laquo",
+            "电路与控制模块基础&raquo",
+            "等课程的教学全过程。"
+        ]
+    },
+    {
+        "name": "吴文强",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/4631.htm",
+        "research": [
+            "模块化机器人",
+            "装车机器人",
+            "机器人规划与控制",
+            "数控技术"
+        ],
+        "email": "gz_wwq@gzhu.edu.cn",
+        "courses": [
+            "《互换性与测量技术》",
+            "《数控技术与CAM》",
+            "《机器人技术》",
+            "《工业机器人应用技术》"
+        ]
+    },
+    {
+        "name": "邓宏光",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/2767.htm",
+        "research": [
+            "◆机械系统振动分析与设备故障诊断"
+        ],
+        "email": "stevendhg@163.com",
+        "courses": []
+    },
+    {
+        "name": "游思坤",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/2518.htm",
+        "research": [
+            "◆模具技术"
+        ],
+        "email": "skunyou@sina.com",
+        "courses": []
+    },
+    {
+        "name": "郑文",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/2517.htm",
+        "research": [
+            "机械故障诊断技术"
+        ],
+        "email": "wzheng163com@163.com",
+        "courses": [
+            "测试技术",
+            "机械故障诊断技术",
+            "磨损与润滑"
+        ]
+    },
+    {
+        "name": "邓武",
+        "homepage": "https://jd.gzhu.edu.cn/info/1097/2502.htm",
+        "research": [
+            "工程力学",
+            "机械系统计算机仿真技术"
+        ],
+        "email": "superalloy@163.com",
+        "courses": [
+            "理论力学",
+            "机械CAD基础"
+        ]
+    },
+    {
+        "name": "庄集超",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/5447.htm",
+        "research": [
+            "机电液装备的健康管理与智能运维",
+            "故障诊断",
+            "机械动态建模",
+            "设备剩余寿命预测"
+        ],
+        "email": "zjc_10242021@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "戴杰涛",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/3341.htm",
+        "research": [],
+        "email": "jd@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "崔金生",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/3326.htm",
+        "research": [
+            "星球采样",
+            "离散元方法",
+            "颗粒传热"
+        ],
+        "email": "meecuijs@gzhu.edu.cn",
+        "courses": [
+            "《机械原理》",
+            "《机械设计基础》",
+            "《机械CAD技术》等。"
+        ]
+    },
+    {
+        "name": "龙尚斌",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/4671.htm",
+        "research": [],
+        "email": "sblong@gzhu.edu.cn",
+        "courses": [
+            "《机械控制原理》",
+            "《数控技术与CAM》",
+            "《无损检测技术》",
+            "《工程经济学》"
+        ]
+    },
+    {
+        "name": "夏淑炎",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/4647.htm",
+        "research": [],
+        "email": "syxia@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "岳夏",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/3353.htm",
+        "research": [
+            "故障诊断",
+            "人工智能",
+            "智能材料",
+            "信号处理"
+        ],
+        "email": "smnsss@gzhu.edu.cn",
+        "courses": [
+            "《材料力学》",
+            "《单片机技术》",
+            "《机械控制原理》等。"
+        ]
+    },
+    {
+        "name": "常家庆",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/3328.htm",
+        "research": [
+            "磁控微机器人",
+            "微流体驱动与控制",
+            "微机器人驱动与控制"
+        ],
+        "email": "jqchang@gzhu.edu.cn",
+        "courses": [
+            "流体力学",
+            "传热学",
+            "液压传动",
+            "高等工程力学"
+        ]
+    },
+    {
+        "name": "刘镇章",
+        "homepage": "https://jd.gzhu.edu.cn/info/1098/2494.htm",
+        "research": [
+            "主动嗅觉",
+            "机器人技术",
+            "机电一体化系统"
+        ],
+        "email": "zhenzhang.liu@gzhu.edu.cn",
+        "courses": [
+            "《C语言程序设计基础》",
+            "《单片机技术》",
+            "《PLC控制技术》"
+        ]
+    },
+    {
+        "name": "梁忠伟",
+        "homepage": "https://jd.gzhu.edu.cn/info/1263/4628.htm",
+        "research": [
+            "高端装备先进制造",
+            "机器人",
+            "智能制造",
+            "核心功能部件",
+            "智能农机等重大装备关键技术领域"
+        ],
+        "email": "liangzhongwei@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "黄卫清",
+        "homepage": "https://jd.gzhu.edu.cn/info/1263/4207.htm",
+        "research": [
+            "压电精密驱动与控制",
+            "振动在材料加工中的应用"
+        ],
+        "email": "meehuangweiqing@gzhu.edu.cn",
+        "courses": [
+            "机械原理",
+            "机械设计",
+            "专业导论等"
+        ]
+    },
+    {
+        "name": "刘长红",
+        "homepage": "https://jd.gzhu.edu.cn/info/1263/5067.htm",
+        "research": [],
+        "email": "lch@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "张建辉",
+        "homepage": "https://jd.gzhu.edu.cn/info/1263/4648.htm",
+        "research": [
+            "压电驱动技术"
+        ],
+        "email": "zhangjh@nuaa.edu.cn",
+        "courses": [
+            "《机械零件设计技术》",
+            "《材料力学》和《微机电系统设计与制造》"
+        ]
+    },
+    {
+        "name": "张帆",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4678.htm",
+        "research": [
+            "压电作动器",
+            "压电雾化机理",
+            "绝对位置编码理论",
+            "角位移传感技术"
+        ],
+        "email": "zhf_jd@gzhu.edu.cn",
+        "courses": [
+            "《测试技术》",
+            "《C语言程序设计基础》",
+            "《单片机技术》",
+            "《机械设计基础》",
+            "《传感器技术》等。"
+        ]
+    },
+    {
+        "name": "沈腾",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4673.htm",
+        "research": [
+            "微机器人",
+            "微纳器件",
+            "微流控",
+            "反无人机"
+        ],
+        "email": "shent215@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "桂珍珍",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4432.htm",
+        "research": [
+            "金属材料加工",
+            "激光加工",
+            "压电雾化"
+        ],
+        "email": "zhenzhengui@gzhu.edu.cn",
+        "courses": [
+            "《材料力学》",
+            "《工程材料》",
+            "《机械制图》等"
+        ]
+    },
+    {
+        "name": "岳磊",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4231.htm",
+        "research": [
+            "智能制造系统",
+            "数字化建模仿真优化",
+            "调度与决策",
+            "人工智能方法"
+        ],
+        "email": "leileiyok@gzhu.edu.cn",
+        "courses": [
+            "《运筹优化理论及应用》",
+            "《MATLAB编程基础》",
+            "《工业企业管理》",
+            "《系统工程》",
+            "《智能制造系统仿真》",
+            "《项目管理》",
+            "《专业导论》",
+            "《智能制造综合实训》"
+        ]
+    },
+    {
+        "name": "李东炜",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/7077.htm",
+        "research": [
+            "精密加工技术",
+            "机电一体化"
+        ],
+        "email": "ldw@gzhu.edu.cn",
+        "courses": [
+            "《金工实习》",
+            "《工程实训I》",
+            "《工程材料》"
+        ]
+    },
+    {
+        "name": "安大伟",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/6977.htm",
+        "research": [
+            "压电精研改性",
+            "功率超声技术",
+            "界面摩擦力学",
+            "智能执行与控制"
+        ],
+        "email": "andavy@gzhu.edu.cn",
+        "courses": [
+            "机械振动学",
+            "理论力学",
+            "C程序设计"
+        ]
+    },
+    {
+        "name": "萧金瑞",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/5077.htm",
+        "research": [
+            "高性能微纳制造",
+            "摩擦学及表面工程",
+            "减隔震技术"
+        ],
+        "email": "meexiaojinrui@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "唐弓斌",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/5027.htm",
+        "research": [
+            "机械摩擦学与表面技术",
+            "机器学习",
+            "第一性原理计算"
+        ],
+        "email": "gbtang@gzhu.edu.cn",
+        "courses": [
+            "《机械设计基础》",
+            "《智能传感与检测技术》等"
+        ]
+    },
+    {
+        "name": "蔡习文",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4764.htm",
+        "research": [
+            "近似模型辅助的设计优化",
+            "多目标优化",
+            "结构设计优化"
+        ],
+        "email": "caixw@gzhu.edu.cn",
+        "courses": [
+            "《工程力学》和《机器人学》"
+        ]
+    },
+    {
+        "name": "陈首彦",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4639.htm",
+        "research": [
+            "水下",
+            "轮足",
+            "协作等机器人建模",
+            "控制",
+            "感知及交互"
+        ],
+        "email": "maxcsy@gzhu.edu.cn",
+        "courses": [
+            "机器人学",
+            "智能控制",
+            "数字图像处理",
+            "批判性思维等"
+        ]
+    },
+    {
+        "name": "刘朝阳",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4230.htm",
+        "research": [
+            "高性能材料增材制造与组织性能调控",
+            "数值计算"
+        ],
+        "email": "liuzy@gzhu.edu.cn",
+        "courses": [
+            "《工程制图I》",
+            "《工程制图II》",
+            "《机械制图2》",
+            "《计算机控制技术》",
+            "《先进制造技术基础》",
+            "《机械设计》"
+        ]
+    },
+    {
+        "name": "王晓明",
+        "homepage": "https://jd.gzhu.edu.cn/info/1264/4229.htm",
+        "research": [
+            "飞行器动力学与控制",
+            "智能可变形结构设计与控制"
+        ],
+        "email": "wangxm@gzhu.edu.cn",
+        "courses": [
+            "《机械设计》",
+            "《机械原理》",
+            "《机械设计基础》"
+        ]
+    },
+    {
+        "name": "陈超湛",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/5377.htm",
+        "research": [
+            "微纳机电器件",
+            "微流控传感器",
+            "数值计算"
+        ],
+        "email": "chenchaozhan@gzhu.edu.cn",
+        "courses": [
+            "《机械制图II》",
+            "《机械制造技术》等"
+        ]
+    },
+    {
+        "name": "赵传",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/5367.htm",
+        "research": [],
+        "email": "zhuan.zhao@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "肖云绵",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/5117.htm",
+        "research": [
+            "金属增材制造装备与工艺开发",
+            "激光原位合成技术等"
+        ],
+        "email": "ymxiao@gzhu.edu.cn",
+        "courses": [
+            "无"
+        ]
+    },
+    {
+        "name": "林利彬",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4974.htm",
+        "research": [
+            "智能制造系统",
+            "数字孪生车间",
+            "智能计算",
+            "进化双层优化",
+            "联合优化"
+        ],
+        "email": "linlibin@gzhu.edu.cn",
+        "courses": [
+            "《工业企业管理》"
+        ]
+    },
+    {
+        "name": "张沁丹",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4775.htm",
+        "research": [
+            "流体力学",
+            "多相流与界面现象",
+            "微流控技术"
+        ],
+        "email": "qdzhang@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "郭晓慧",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4679.htm",
+        "research": [
+            "绿色环保多功能生物质小分子助剂",
+            "高性能橡胶纳米复合材料",
+            "柔性传感器件"
+        ],
+        "email": "xhguo@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "陈湘江",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4646.htm",
+        "research": [
+            "机械自动化"
+        ],
+        "email": "个人简介",
+        "courses": [
+            "金工实习"
+        ]
+    },
+    {
+        "name": "唐睿智",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4644.htm",
+        "research": [
+            "智能制造",
+            "机器人装备",
+            "工程机械设计等"
+        ],
+        "email": "meetangruizhizhi@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "孟瑞繁",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4641.htm",
+        "research": [
+            "高分子流变学",
+            "分数阶本构模型",
+            "物理信息神经网络"
+        ],
+        "email": "rfmeng@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "曹流",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4228.htm",
+        "research": [
+            "材料成形过程数值模拟",
+            "金属增材制造(3D打印)",
+            "基于物理知识的机器学习",
+            "金属流变学"
+        ],
+        "email": "caoliu@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "王锐坤",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4227.htm",
+        "research": [
+            "金属材料表面科学与工程",
+            "纳米功能材料",
+            "金属腐蚀电化学"
+        ],
+        "email": "wrk@gzhu.edu.cn",
+        "courses": [
+            "主讲课程：机械制图",
+            "机械设计基础",
+            "机械原理",
+            "MATLAB编程与实训基础。"
+        ]
+    },
+    {
+        "name": "周琰",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4218.htm",
+        "research": [
+            "滚动-滚滑摩擦磨损",
+            "扭转微动磨损",
+            "磨损损伤表征"
+        ],
+        "email": "yanzhou@gzhu.edu.cn",
+        "courses": [
+            "承担课程为《机械制图II&III》",
+            "《工程制图》",
+            "《测试技术》"
+        ]
+    },
+    {
+        "name": "周超",
+        "homepage": "https://jd.gzhu.edu.cn/info/1265/4216.htm",
+        "research": [
+            "机械故障诊断",
+            "超声无损检测",
+            "结构健康监测"
+        ],
+        "email": "czhou@gzhu.edu.cn",
+        "courses": [
+            "《理论力学》",
+            "《材料力学》",
+            "《机械制图》",
+            "《矩阵论》",
+            "《机械动力学》"
+        ]
+    },
+    {
+        "name": "邹涛",
+        "homepage": "https://jd.gzhu.edu.cn/info/1149/3715.htm",
+        "research": [
+            "◆ 运动控制"
+        ],
+        "email": "tzou@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "赵志甲",
+        "homepage": "https://jd.gzhu.edu.cn/info/1149/5037.htm",
+        "research": [
+            "◆ 机器人控制"
+        ],
+        "email": "zhaozj@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "王立敏",
+        "homepage": "https://jd.gzhu.edu.cn/info/1149/4704.htm",
+        "research": [
+            "工业过程",
+            "水下/轮式机器人等控制优化",
+            "大数据处理及深度学习",
+            "故障诊断与容错控制",
+            "网络化多智能体控制理论与应用"
+        ],
+        "email": "lm_wang@gzhu.edu.cn",
+        "courses": [
+            "《高等数学》",
+            "《微积分》",
+            "《概率论与数理统计》",
+            "《控制理论基础》等"
+        ]
+    },
+    {
+        "name": "李致富",
+        "homepage": "https://jd.gzhu.edu.cn/info/1149/4675.htm",
+        "research": [
+            "智能精密装备及系统",
+            "智能机器人及系统（包括运动控制",
+            "群智能优化算法",
+            "机器视觉",
+            "人工智能技术",
+            "先进控制理论及应用等）"
+        ],
+        "email": "lizhifu8@163.com",
+        "courses": [
+            "《自动控制原理》",
+            "《机器学习导论》",
+            "《电机驱动技术》",
+            "《计算机控制技术》等"
+        ]
+    },
+    {
+        "name": "马鸽",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/4674.htm",
+        "research": [
+            "图像处理与机器视觉",
+            "柔性结构控制"
+        ],
+        "email": "m_ge@gzhu.edu.cn",
+        "courses": [
+            "本科生：《电路》",
+            "《电路实验》",
+            "《机器视觉基础》",
+            "《可视化程序设计》"
+        ]
+    },
+    {
+        "name": "​吴文波",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/6957.htm",
+        "research": [
+            "CFD",
+            "仿生流体力学",
+            "流固耦合分析"
+        ],
+        "email": "wwb1987wave@gzhu.edu.cn",
+        "courses": [
+            "1. SolidWorks三维建模技术"
+        ]
+    },
+    {
+        "name": "钟晓静",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/6947.htm",
+        "research": [
+            "高阶网络传播系统的建模",
+            "分析与控制"
+        ],
+        "email": "zhongxj@gzhu.edu.cn",
+        "courses": [
+            "本科生：《电路》",
+            "《复变函数与积分变换》",
+            "《网络安全动力学建模与控制》"
+        ]
+    },
+    {
+        "name": "项超群",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/5317.htm",
+        "research": [
+            "机械工程",
+            "仿生机器人感知",
+            "建模及驱控",
+            "助力及康复机器人",
+            "人工智能等"
+        ],
+        "email": "cqxiang86@163.com",
+        "courses": []
+    },
+    {
+        "name": "李晓孟",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/5197.htm",
+        "research": [
+            "多智能体协同控制",
+            "强化学习",
+            "网络安全",
+            "信息物理系统安全控制及其在智能无人系统的应用等。"
+        ],
+        "email": "lxm23@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "陈达奇",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/5047.htm",
+        "research": [
+            "生物传感技术",
+            "人工智能医学辅助诊断等"
+        ],
+        "email": "daqichen@gzhu.edu.cn",
+        "courses": [
+            "《信号与系统》",
+            "《Solidworks三维实体造型技术》",
+            "《虚拟仪器技术（LabVIEW）》",
+            "《机器人传感技术》",
+            "《深度学习及其应用》",
+            "《神经网络与深度学习》"
+        ]
+    },
+    {
+        "name": "余锦视",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/4781.htm",
+        "research": [
+            "基于张量分解的图像补全",
+            "去噪",
+            "背景去除",
+            "聚类"
+        ],
+        "email": "jinshi.yu@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "何树德",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/4698.htm",
+        "research": [
+            "协同控制",
+            "学习控制",
+            "地面/水面/水下机器人控制研究"
+        ],
+        "email": "shude_he@gzhu.edu.cn",
+        "courses": [
+            "《机器人学》",
+            "《现代控制理论》",
+            "《智能控制技术》"
+        ]
+    },
+    {
+        "name": "康浩博",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/4428.htm",
+        "research": [
+            "协作机器人",
+            "外骨骼机器人",
+            "移动作业机器人以及产业化应用",
+            "包括协作任务决策与动态作业调控",
+            "主动环境探索与场景语义理解",
+            "肢体动作生成与末端位力协调等。"
+        ],
+        "email": "kanghaobo@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "陈志鹏",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/4426.htm",
+        "research": [
+            "功能微结构制造",
+            "磁性材料及其机器人学应用",
+            "随机过程。"
+        ],
+        "email": "chenzhipeng@gzhu.edu.cn",
+        "courses": [
+            "C语言编程",
+            "嵌入式系统",
+            "数字信号处理"
+        ]
+    },
+    {
+        "name": "张晋华",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/4235.htm",
+        "research": [
+            "汽车运动控制",
+            "自适应鲁棒控制"
+        ],
+        "email": "zjhjd@gzhu.edu.cn",
+        "courses": [
+            "《电工电子学》"
+        ]
+    },
+    {
+        "name": "刘贵云",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/2794.htm",
+        "research": [
+            "大模型",
+            "强化学习",
+            "低空智联网安全",
+            "水下物联网安全"
+        ],
+        "email": "liugy@gzhu.edu.cn",
+        "courses": [
+            "主要讲授电磁场",
+            "机器人传感技术",
+            "神经网络与深度学习",
+            "网络安全动力学建模",
+            "强化学习实践",
+            "元学习前沿实践等。"
+        ]
+    },
+    {
+        "name": "黄文恺",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/3954.htm",
+        "research": [
+            "人工智能",
+            "软体机器人"
+        ],
+        "email": "smallkat@gzhu.edu.cn",
+        "courses": [
+            "《单片机原理及应用》",
+            "《可编程逻辑控制器PLC原理与应用技术》",
+            "《设计创意与知识产权战略》",
+            "《.有限元技术》",
+            "《.创新产品开发》等"
+        ]
+    },
+    {
+        "name": "蓝雪婧",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/4430.htm",
+        "research": [
+            "无人系统轨迹规划",
+            "自适应动态规划与强化学习",
+            "分布式协调控制"
+        ],
+        "email": "lanxj@gzhu.edu.cn",
+        "courses": [
+            "《C语言程序设计》",
+            "《机器学习导论》",
+            "《智能控制技术》",
+            "《多智能体协同控制》"
+        ]
+    },
+    {
+        "name": "陈凯锐",
+        "homepage": "https://jd.gzhu.edu.cn/info/1150/3773.htm",
+        "research": [
+            "多智能体协同控制",
+            "分布式状态估计",
+            "无人车和无人机相关研究"
+        ],
+        "email": "kray@gzhu.edu.cn",
+        "courses": [
+            "自动控制原理",
+            "现代控制理论",
+            "计算机控制技术",
+            "C语言",
+            "多智能体系统协同控制"
+        ]
+    },
+    {
+        "name": "梅小康",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/6897.htm",
+        "research": [
+            "先进制造与功能结构"
+        ],
+        "email": "meixk@gzhu.edu.cn",
+        "courses": [
+            "《工程力学Ⅰ》",
+            "《互换性与测量技术》"
+        ]
+    },
+    {
+        "name": "王靖雯",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/6857.htm",
+        "research": [
+            "人因工程与人机交互",
+            "机器学习",
+            "虚拟仿真",
+            "智能制造",
+            "人机工效学"
+        ],
+        "email": "jingwen@gzhu.edu.cn",
+        "courses": [
+            "《机器学习导论》",
+            "《C语言程序设计基础》",
+            "《工程项目管理》等"
+        ]
+    },
+    {
+        "name": "郑运军",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/6347.htm",
+        "research": [
+            "机械系统动力学控制",
+            "滑模控制",
+            "自适应鲁棒控制"
+        ],
+        "email": "yzheng@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "余珮琳",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/6327.htm",
+        "research": [
+            "智能无人系统",
+            "随机系统的建模",
+            "分析与控制"
+        ],
+        "email": "yupeilin@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "刘云",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/6197.htm",
+        "research": [
+            "周期系统",
+            "网络安全",
+            "信息融合",
+            "状态估计与控制"
+        ],
+        "email": "y.liu@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "彭奕佳",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/6187.htm",
+        "research": [
+            "机器人机构学"
+        ],
+        "email": "pengyijia@gzhu.edu.cn",
+        "courses": [
+            "《机械设计基础》"
+        ]
+    },
+    {
+        "name": "宁波",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/4685.htm",
+        "research": [
+            "大型掘进装备设计方法",
+            "结构优化设计",
+            "机械机构疲劳分析"
+        ],
+        "email": "ningb@gzhu.edu.cn",
+        "courses": [
+            "《机械设计基础》",
+            "《机械原理》",
+            "《虚拟仪器技术（LabVIEW）》"
+        ]
+    },
+    {
+        "name": "解元",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/4291.htm",
+        "research": [
+            "盲信号分离",
+            "语音信号处理",
+            "医学信号处理",
+            "机器学习",
+            "神经网络学习",
+            "智能检测",
+            "模糊控制",
+            "语音增强"
+        ],
+        "email": "xieyuan@gzhu.edu.cn",
+        "courses": [
+            "本科：矩阵论与MATLAB程序设计",
+            "工业控制基础",
+            "数字信号处理",
+            "控制工程"
+        ]
+    },
+    {
+        "name": "胡诚",
+        "homepage": "https://jd.gzhu.edu.cn/info/1151/4234.htm",
+        "research": [
+            "移动机器人",
+            "视觉感知",
+            "生物似然系统",
+            "微型机器人",
+            "群体智能"
+        ],
+        "email": "c_hu@gzhu.edu.cn",
+        "courses": [
+            "《机器视觉》",
+            "《嵌入式技术》",
+            "《模式识别》",
+            "《移动机器人导航与定位技术》"
+        ]
+    },
+    {
+        "name": "张杰",
+        "homepage": "https://jd.gzhu.edu.cn/info/1099/6997.htm",
+        "research": [],
+        "email": "jd@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "彭凌西",
+        "homepage": "https://jd.gzhu.edu.cn/info/1099/4307.htm",
+        "research": [],
+        "email": "penglx@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "孟晓波",
+        "homepage": "https://jd.gzhu.edu.cn/info/1099/3952.htm",
+        "research": [
+            "高电压与绝缘技术"
+        ],
+        "email": "mengxb@gzhu.edu.cn",
+        "courses": [
+            "《高电压工程》"
+        ]
+    },
+    {
+        "name": "杨汝",
+        "homepage": "https://jd.gzhu.edu.cn/info/1099/2792.htm",
+        "research": [
+            "◆ 电力电子的非线性特性研究及其在EMI抑制中的应用"
+        ],
+        "email": "yangru@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "胡晓",
+        "homepage": "https://jd.gzhu.edu.cn/info/1099/3961.htm",
+        "research": [],
+        "email": "huxiao@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "王孝伟",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/7007.htm",
+        "research": [
+            "电机本体设计",
+            "电机驱动控制",
+            "电力电子电路"
+        ],
+        "email": "meewxw_ee@gzhu.edu.cn",
+        "courses": [
+            "电机学",
+            "新型电机及应用等。"
+        ]
+    },
+    {
+        "name": "陈洋",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/6987.htm",
+        "research": [
+            "电力电子与电力传动",
+            "电池管理系统设计",
+            "电池状态估计",
+            "能源管理"
+        ],
+        "email": "yangchen@gzhu.edu.cn",
+        "courses": [
+            "电力电子技术",
+            "电力电子学(研)",
+            "电路",
+            "电路实验",
+            "传感器与自动检测技术",
+            "智能控制",
+            "专业英语"
+        ]
+    },
+    {
+        "name": "刘文杰",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/5357.htm",
+        "research": [
+            "智能电网",
+            "交通电气化",
+            "需求响应",
+            "优化理论"
+        ],
+        "email": "lwj1993@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "王建晖",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/4687.htm",
+        "research": [
+            "人工智能",
+            "协同控制",
+            "网络控制系统容错控制"
+        ],
+        "email": "jhwang@gzhu.edu.cn",
+        "courses": [
+            "现代控制理论",
+            "非线性控制",
+            "自动控制原理",
+            "电力电子技术",
+            "运动控制系统"
+        ]
+    },
+    {
+        "name": "路瑞娥",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/4425.htm",
+        "research": [
+            "磁性功能材料（含变压器磁芯材料",
+            "磁相变（玻璃态）",
+            "功能性软磁铁氧体及磁路设计）"
+        ],
+        "email": "lure@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "王晓刚",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/2464.htm",
+        "research": [],
+        "email": "wxg@gzhu.edu.cn",
+        "courses": [
+            "电力系统继电保护原理（广东省一流本科课程）"
+        ]
+    },
+    {
+        "name": "柳晶晶",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/2462.htm",
+        "research": [
+            "气体放电机理及其在新材料新能源上的应用",
+            "分布式能源接入配网的源网荷储优化调度",
+            "虚拟电厂的优化调度"
+        ],
+        "email": "liujj@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "王佳庆",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/2463.htm",
+        "research": [
+            "运动控制与电力电子技术",
+            "智能控制",
+            "新能源控制技术等"
+        ],
+        "email": "wangjiaqing163@163.com",
+        "courses": []
+    },
+    {
+        "name": "王亚飞",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/4386.htm",
+        "research": [
+            "半导体材料与半导体电子器件"
+        ],
+        "email": "yw@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "陆文甜",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/4233.htm",
+        "research": [
+            "电力系统智能优化",
+            "运行与控制"
+        ],
+        "email": "luwentian@gzhu.edu.cn",
+        "courses": [
+            "电力系统调度",
+            "智能电网",
+            "电气工程仿真技术"
+        ]
+    },
+    {
+        "name": "程乐峰",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/3927.htm",
+        "research": [
+            "新一代人工智能",
+            "博弈论（尤其演化博弈论）等理论与技术研究及其在电力市场",
+            "智能电网",
+            "综合能源系统等领域中的应用"
+        ],
+        "email": "chenglefeng@gzhu.edu.cn",
+        "courses": [
+            "《电气工程仿真技术》",
+            "《电气工程研讨课》"
+        ]
+    },
+    {
+        "name": "杨红",
+        "homepage": "https://jd.gzhu.edu.cn/info/1102/3824.htm",
+        "research": [
+            "电机控制",
+            "人工智能",
+            "FPGA"
+        ],
+        "email": "yhenryh@sina.com",
+        "courses": [
+            "《智能控制》",
+            "《现代控制理论》",
+            "《计算机控制技术》"
+        ]
+    },
+    {
+        "name": "张佳宁",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/5347.htm",
+        "research": [],
+        "email": "zjn325@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "杨平",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/5337.htm",
+        "research": [
+            "电子科学与技术"
+        ],
+        "email": "yangping@gzhu.edu.cn",
+        "courses": []
+    },
+    {
+        "name": "李京伦",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/4705.htm",
+        "research": [
+            "离散事件系统(DES)的控制理论",
+            "信息物理系统的安全分析与防护。"
+        ],
+        "email": "lijinglun@gzhu.edu.cn",
+        "courses": [
+            "复变函数与积分变换",
+            "专业英语"
+        ]
+    },
+    {
+        "name": "陈艺端",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/3891.htm",
+        "research": [
+            "电机本体设计",
+            "电机驱动控制",
+            "电力电子电路"
+        ],
+        "email": "ydchen@gzhu.edu.cn",
+        "courses": [
+            "科研服务:"
+        ]
+    },
+    {
+        "name": "石坚",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/2962.htm",
+        "research": [
+            "电机系统及其控制",
+            "电力电子与电能变换",
+            "汽车电子装置研发"
+        ],
+        "email": "shi@gzhu.edu.cn",
+        "courses": [
+            "《电路》",
+            "《电机学》",
+            "《电气工程专业英语》",
+            "《研究生专业英语》等"
+        ]
+    },
+    {
+        "name": "舒华",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/2803.htm",
+        "research": [
+            "智能控制",
+            "神经网络控制",
+            "物联网技术"
+        ],
+        "email": "h_shu@gzhu.edu.cn",
+        "courses": [
+            "单片机原理与接口技术",
+            "可视化程序设计",
+            "电气控制与可编程控制器",
+            "数字电子技术",
+            "模拟电子技术",
+            "电工电子技术",
+            "计算机虚拟仪器技术等"
+        ]
+    },
+    {
+        "name": "肖忠",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/2800.htm",
+        "research": [
+            "测量仪器",
+            "电机驱动",
+            "水质监测",
+            "物联网应用"
+        ],
+        "email": "gzxiaozhong@gzhu.edu.cn",
+        "courses": [
+            "单片机原理与接口技术",
+            "计算机虚拟仪器技术",
+            "电工电子技术",
+            "微机原理与接口技术",
+            "C语言程序设计",
+            "电子线路CAD"
+        ]
+    },
+    {
+        "name": "黄汉奇",
+        "homepage": "https://jd.gzhu.edu.cn/info/1104/4338.htm",
+        "research": [],
+        "email": "jd@gzhu.edu.cn",
+        "courses": []
+    }
+]

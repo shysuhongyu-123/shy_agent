@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广州大学机械与电气工程学院 — 导师推荐系统</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="app-container">
+    <!-- 左侧边栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h2>导师推荐系统</h2>
+            <p class="subtitle">广州大学 · 机械与电气工程学院</p>
+        </div>
+        <div class="sidebar-info">
+            <div class="info-card">
+                <i class="fas fa-lightbulb"></i>
+                <span>告诉我你的兴趣方向</span>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-bullseye"></i>
+                <span>设定你的学业/职业目标</span>
+            </div>
+            <div class="info-card">
+                <i class="fas fa-user-graduate"></i>
+                <span>获取匹配导师推荐</span>
+            </div>
+        </div>
+        <div class="sidebar-footer">
+            <div class="tip-card">
+                <i class="fas fa-comment-dots"></i>
+                <div class="tip-text">
+                    <strong>试试这样说：</strong>
+                    <p>"我喜欢机器人"</p>
+                    <p>"我想就业"</p>
+                    <p>"查看我的画像"</p>
+                    <p>"推荐导师"</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 右侧主聊天区 -->
+    <main class="main-content">
+        <div class="chat-header">
+            <div class="header-left">
+                <i class="fas fa-robot"></i>
+                <span>智能助手</span>
+            </div>
+            <div class="header-right">
+                <span class="status-dot"></span>
+                <span class="status-text">在线</span>
+            </div>
+        </div>
+
+        <div id="chat-box" class="chat-box">
+            <!-- 消息会由 JavaScript 动态添加 -->
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea id="message" placeholder="输入你的想法，比如：我喜欢机器人..." rows="1"></textarea>
+                <button id="sendBtn" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-tips">
+                <span class="tip" onclick="quickFill('我喜欢机器人')">🤖 机器人</span>
+                <span class="tip" onclick="quickFill('我想就业')">💼 就业</span>
+                <span class="tip" onclick="quickFill('查看我的画像')">📋 查看画像</span>
+                <span class="tip" onclick="quickFill('推荐导师')">🎯 推荐导师</span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+// 页面加载时获取欢迎消息
+window.onload = async function() {
+    try {
+        let response = await fetch("/welcome", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"}
+        });
+        let data = await response.json();
+        addBotMessage(data.reply);
+    } catch (e) {
+        addBotMessage("你好！欢迎来到广州大学机械与电气工程学院导师推荐系统！请告诉我你的兴趣方向，我会为你推荐合适的导师。😊");
+    }
+};
+
+async function sendMessage() {
+    let input = document.getElementById("message");
+    let text = input.value.trim();
+    if (!text) return;
+
+    // 禁用发送按钮防止重复提交
+    let btn = document.getElementById("sendBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    addUserMessage(text);
+    input.value = "";
+    autoResize(input);
+
+    try {
+        let response = await fetch("/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({message: text})
+        });
+        let data = await response.json();
+        addBotMessage(data.reply);
+    } catch (e) {
+        addBotMessage("抱歉，我遇到了一些问题，请稍后再试。");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+    }
+}
+
+function addUserMessage(text) {
+    let box = document.getElementById("chat-box");
+    let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
+    box.innerHTML += `
+        <div class="message user">
+            <div class="message-content">
+                <div class="bubble">${escapeHtml(text)}</div>
+            </div>
+            <div class="message-meta">
+                <span class="time">${time}</span>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function addBotMessage(text) {
+    let box = document.getElementById("chat-box");
+    let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
+    // 将文本中的换行转为 <br>
+    let formattedText = escapeHtml(text).replace(/\n/g, '<br>');
+    box.innerHTML += `
+        <div class="message bot">
+            <div class="message-meta">
+                <i class="fas fa-robot"></i>
+                <span class="time">${time}</span>
+            </div>
+            <div class="message-content">
+                <div class="bubble">${formattedText}</div>
+            </div>
+        </div>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function quickFill(text) {
+    document.getElementById("message").value = text;
+    autoResize(document.getElementById("message"));
+    document.getElementById("message").focus();
+}
+
+function autoResize(textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 自动调整输入框高度
+document.getElementById("message").addEventListener("input", function() {
+    autoResize(this);
+});
+
+// Enter 发送（Shift+Enter 换行）
+document.getElementById("message").addEventListener("keydown", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+</script>
+</body>
+</html>
