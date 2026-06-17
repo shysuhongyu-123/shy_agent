@@ -41,10 +41,12 @@ body {
                  "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
     background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
     min-height: 100vh;
+    min-height: 100dvh; /* 动态视口高度，解决手机浏览器地址栏问题 */
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* 改为 flex-start 避免高度锁定 */
     padding: 20px;
+    overflow: hidden; /* 禁止 body 滚动，让内部容器滚动 */
 }
 
 /* ============================================================
@@ -54,6 +56,7 @@ body {
     width: 100%;
     max-width: 1200px;
     height: 90vh;
+    height: 90dvh; /* 动态视口高度 */
     display: flex;
     border-radius: var(--radius-xl);
     overflow: hidden;
@@ -219,6 +222,7 @@ body {
     flex-direction: column;
     background: var(--chat-bg);
     min-width: 0;
+    min-height: 0; /* 重要：允许 flex 子项收缩 */
 }
 
 /* 聊天头部 */
@@ -279,11 +283,15 @@ body {
 .chat-box {
     flex: 1;
     overflow-y: auto;
+    overflow-y: overlay; /* 在支持浏览器上不占用宽度的滚动条 */
+    -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+    overscroll-behavior: contain; /* 防止滚动穿透 */
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 20px;
     background: var(--chat-bg);
+    min-height: 0; /* 重要：允许 flex 子项收缩 */
 }
 
 .chat-box::-webkit-scrollbar {
@@ -309,6 +317,7 @@ body {
     flex-direction: column;
     max-width: 80%;
     animation: messageSlide 0.3s ease;
+    flex-shrink: 0; /* 防止消息被压缩 */
 }
 
 @keyframes messageSlide {
@@ -508,47 +517,52 @@ body {
 }
 
 /* ============================================================
-   响应式设计
+   响应式设计 - 手机端
    ============================================================ */
 @media (max-width: 768px) {
     body {
         padding: 0;
+        align-items: stretch; /* 手机端拉伸填满 */
     }
 
     .app-container {
         height: 100vh;
+        height: 100dvh; /* 动态视口高度，解决手机浏览器地址栏问题 */
         border-radius: 0;
         flex-direction: column;
     }
 
     .sidebar {
         width: 100%;
-        padding: 16px 20px;
+        padding: 12px 16px;
         flex-direction: row;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
+        flex-shrink: 0;
     }
 
     .sidebar-header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         margin-bottom: 0;
         width: 100%;
     }
 
     .logo {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         margin: 0;
+        animation: none; /* 手机端去掉脉冲动画，减少性能消耗 */
     }
 
     .logo i {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .sidebar-header h2 {
-        font-size: 15px;
+        font-size: 14px;
+        white-space: nowrap;
     }
 
     .subtitle {
@@ -558,41 +572,119 @@ body {
     .sidebar-info {
         flex-direction: row;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 4px;
+        flex: none; /* 不拉伸 */
+        width: 100%;
     }
 
     .info-card {
-        padding: 8px 12px;
+        padding: 6px 10px;
         flex: 1;
-        min-width: 100px;
+        min-width: 80px;
+        gap: 6px;
     }
 
     .info-card i {
-        font-size: 14px;
+        font-size: 12px;
+        width: 16px;
     }
 
     .info-card span {
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .sidebar-footer {
         display: none;
     }
 
+    /* 聊天区域 */
+    .main-content {
+        min-height: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-header {
+        padding: 12px 16px;
+        flex-shrink: 0;
+    }
+
+    .chat-box {
+        padding: 16px;
+        gap: 14px;
+        flex: 1;
+        min-height: 0;
+        /* 确保可滚动 */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .message {
-        max-width: 90%;
+        max-width: 92%;
+    }
+
+    .bubble {
+        padding: 12px 14px;
+        font-size: 14px;
+        line-height: 1.6;
     }
 
     .input-area {
-        padding: 12px 16px 16px;
+        padding: 10px 12px 14px;
+        flex-shrink: 0;
+    }
+
+    .input-wrapper textarea {
+        font-size: 16px; /* 防止 iOS 自动缩放 */
+        padding: 8px 10px;
     }
 
     .input-tips {
-        gap: 6px;
+        gap: 5px;
+        margin-top: 8px;
     }
 
     .tip {
         font-size: 11px;
         padding: 4px 10px;
+    }
+}
+
+/* 超小屏手机 (< 400px) */
+@media (max-width: 400px) {
+    .sidebar {
+        padding: 8px 10px;
+    }
+
+    .sidebar-header h2 {
+        font-size: 13px;
+    }
+
+    .info-card {
+        padding: 4px 8px;
+        min-width: 60px;
+    }
+
+    .info-card span {
+        font-size: 10px;
+    }
+
+    .chat-box {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .message {
+        max-width: 95%;
+    }
+
+    .bubble {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .input-area {
+        padding: 8px 10px 12px;
     }
 }
