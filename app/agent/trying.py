@@ -106,13 +106,35 @@ def create_llm():
 llm = create_llm()
 
 
+def load_all_teachers():
+    """加载所有导师数据，供 chat_node 和 recommend_node 使用"""
+    import json as _json
+    teachers_path = os.path.join(BASE_DIR, "..", "gzhu_teachers.json")
+    # 如果上面路径不对，尝试直接找
+    if not os.path.exists(teachers_path):
+        teachers_path = os.path.join(BASE_DIR, "..", "..", "gzhu_teachers.json")
+    if not os.path.exists(teachers_path):
+        teachers_path = os.path.join(os.path.dirname(BASE_DIR), "gzhu_teachers.json")
+    try:
+        with open(teachers_path, "r", encoding="utf-8") as f:
+            teachers = _json.load(f)
+        return teachers
+    except Exception as e:
+        print("加载导师数据失败:", e)
+        return []
+
+
+# 全局缓存所有导师数据
+ALL_TEACHERS = load_all_teachers()
+
+
 def intent_node(state: State):
     prompt = f"""你是一个意图分类器。根据用户输入，只返回以下词之一：
     - reset_profile：用户想重置/清空/删除画像（如"重置我的画像"、"清空画像"、"重新开始"、"删除画像"、"重置"）。注意：这是最高优先级，只要用户表达重置意图就返回此值。
     - explore：用户表示迷茫、不知道喜欢什么、想了解各个方向、让系统介绍研究方向（如"我不知道喜欢什么"、"给我介绍一下方向"、"有哪些方向"、"我不知道选什么"、"我不确定"、"帮我看看"、"介绍方向"）。
     - show_profile：用户提及查看画像及其类似语义（如"查看画像"、"我的画像"、"看看我的兴趣"、"当前画像"、"查看用户画像"）。
     - update_profile：用户表达了个人兴趣、目标、计划、专业背景、喜好（如"我喜欢..."、"我想..."、"我计划..."），需要记录到用户画像。
-    - recommend：用户在寻求建议、推荐导师、方向或资源（前提是画像已更新或无需更新）。
+    - recommend：用户在寻求建议、推荐导师、方向或资源（前提是画像已更新或无需更新）。注意：用户说"换一批"、"换几个"、"换一些"、"换导师"、"换推荐"等也属于 recommend。
     - chat：普通闲聊、问候、或无法归入以上几类的问题。
     分类规则（按优先级从高到低）：
     1. 如果用户明确表达重置/清空/删除画像的意图，返回 reset_profile
@@ -121,6 +143,12 @@ def intent_node(state: State):
     4. 如果用户表达了个人兴趣/目标/喜好（即使是以否定形式如"不喜欢"），返回 update_profile
     5. 如果用户明确要求推荐，返回 recommend
     6. 其他情况返回 chat
+
+    重要判断规则：
+    - 如果用户是在询问某个系/学院/专业有哪些导师、几位导师、导师信息（如"智能工程系有几位硕士导师"、"网络安全方面的导师"、"机械设计专业的老师"），这属于查询导师信息，应返回 chat（因为 chat_node 可以回答导师相关问题）
+    - 只有当用户明确表达"我喜欢/我想/我感兴趣/我计划/我的兴趣是"等个人偏好时，才返回 update_profile
+    - 如果用户只是提到某个方向名称但没有表达个人偏好（如"网络安全方向"、"机器人方向"），不应视为 update_profile
+
     用户输入：{state['user_input']}
 
     只返回一个词，不要解释。"""
@@ -430,14 +458,14 @@ def show_profile_summary_node(state: State):
 
 
 def recommend_node(state: State):
-    # 从数据库读取最新的画像数据，确保推荐基于持久化的最新画像
+    """推荐导师，每次返回6个，支持换一批"""
     session_id = state.get("session_id", "default")
     profile = load_profile(session_id)
 
-    # 1. 检索
-    teachers = recommend_teachers(profile, top_n=5)
+    # 1. 检索，取更多导师用于换一批
+    all_teachers = recommend_teachers(profile, top_n=30)
 
-    if not teachers:
+    if not all_teachers:
         reply = "抱歉，暂时没有匹配到合适的导师。"
         messages = state.get("messages", []) + [
             HumanMessage(content=state["user_input"]),
@@ -445,7 +473,35 @@ def recommend_node(state: State):
         ]
         return {"response": reply, "messages": messages}
 
-    # 2. 构建安全列表（姓名由数据保证）
+    # 2. 判断是否是"换一批"请求
+    user_input = state.get("user_input", "")
+    is_refresh = any(kw in user_input for kw in ["换一批", "换几个", "换一些", "换导师", "换推荐", "换人", "换"])
+
+    # 3. 从 session 中获取已推荐的导师索引
+    # 使用 profile_db 的 history 来记录已推荐过的导师
+    from app.profile_db import get_recommend_offset, set_recommend_offset
+    offset = get_recommend_offset(session_id)
+    if is_refresh:
+        offset += 6  # 跳过上一批
+    else:
+        offset = 0  # 重新开始
+
+    # 确保不越界
+    if offset >= len(all_teachers):
+        offset = 0  # 循环
+
+    # 4. 取6个（从 offset 开始）
+    teachers = all_teachers[offset:offset + 6]
+    if len(teachers) < 6:
+        # 如果不够6个，从头补
+        remaining = 6 - len(teachers)
+        teachers += all_teachers[:remaining]
+        offset = 0  # 循环了
+
+    # 保存新的 offset
+    set_recommend_offset(session_id, offset)
+
+    # 3. 构建显示列表
     teacher_list = []
     for idx, t in enumerate(teachers, 1):
         teacher_list.append(
@@ -461,7 +517,7 @@ def recommend_node(state: State):
 
     profile_summary = build_profile_brief(profile)
 
-    # 3. 让 LLM 生成一段总体推荐说明（不要求列出姓名）
+    # 4. 让 LLM 生成一段总体推荐说明
     prompt = f"""
     你是广州大学机械与电气工程学院的导师推荐专家。
     根据用户画像，请为以下候选导师写一段约150字的推荐说明，说明这些导师为什么适合该学生。
@@ -477,8 +533,8 @@ def recommend_node(state: State):
     """
     analysis = llm.invoke(prompt).content
 
-    # 4. 拼接最终回复
-    final_reply = f"为你找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}"
+    # 5. 拼接最终回复，加上换一批提示
+    final_reply = f"为你找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}\n\n---\n不满意？可以告诉我「换一批」或继续点击推荐按钮，我会为你推荐其他导师。"
     messages = state.get("messages", []) + [
         HumanMessage(content=state["user_input"]),
         AIMessage(content=final_reply)
@@ -599,7 +655,7 @@ def reset_profile_node(state: State):
     empty_profile = {"interest": {}, "goal": {}, "history": []}
     save_profile(empty_profile, session_id)
 
-    reply = "已为您清空所有画像信息，我们可以重新开始！请告诉我您的兴趣方向吧 😊"
+    reply = "已为您清空所有画像信息，我们可以重新开始！请告诉我您的兴趣方向吧。"
     messages = state.get("messages", []) + [
         HumanMessage(content=state["user_input"]),
         AIMessage(content=reply)
@@ -633,14 +689,13 @@ def load_teachers_data():
 
 
 def chat_node(state: State):
-    # 加载导师数据和用户画像，注入到 system prompt 中
-    teachers = load_teachers_data()
+    """聊天节点，注入全部导师信息，支持查询各类导师问题"""
     session_id = state.get("session_id", "default")
     profile = load_profile(session_id)
 
-    # 构建导师信息摘要（只取前 10 个作为参考，避免 token 过多）
+    # 构建全部导师信息摘要（不再限制前10个）
     teacher_summary = ""
-    for t in teachers[:10]:
+    for t in ALL_TEACHERS:
         research = "、".join(t.get("research", [])) or "暂无"
         courses = "、".join(t.get("courses", [])) or "暂无"
         teacher_summary += f"- {t['name']}：研究方向【{research}】，课程【{courses}】\n"
@@ -651,21 +706,23 @@ def chat_node(state: State):
     interest_text = "、".join([f"{NAME_MAP.get(n, n)}({d['composite_score']})" for n, d in interests[:3]]) or "暂无"
     goal_text = "、".join([f"{NAME_MAP.get(n, n)}({d['composite_score']})" for n, d in goals[:3]]) or "暂无"
 
-    system_prompt = f"""你是广州大学机械与电气工程学院的智能导师推荐助手，热情、亲切、专业。
+    system_prompt = f"""你是 Mario，广州大学机械与电气工程学院的导师推荐助手。你的名字来自超级马里奥，因为你像马里奥一样乐于助人、充满活力。
 你可以回答关于学院导师的任何问题，包括介绍导师的研究方向、课程等。
 
 当前用户的画像信息：
 - 兴趣方向：{interest_text}
 - 目标：{goal_text}
 
-以下是学院的部分导师信息（供你参考回答导师相关问题）：
+以下是学院的全部导师信息（供你参考回答导师相关问题）：
 {teacher_summary}
 
 注意：
 1. 如果用户问"XXX老师怎么样"、"介绍一下XXX老师"，请根据导师信息回答
-2. 如果用户问的导师不在列表中，如实说"暂未找到该导师的信息"
-3. 如果用户问与导师无关的问题，正常闲聊即可
-4. 回答要亲切自然，像学长/学姐在聊天"""
+2. 如果用户问"XX专业/方向有几位导师"、"XX方向的硕士导师"、"XX课程的老师"，请根据导师信息列出符合条件的导师
+3. 如果用户问"网络安全方面的导师"、"机器人的导师"等方向性问题，请根据研究方向匹配并列出相关导师
+4. 如果用户问的导师不在列表中，如实说"暂未找到该导师的信息"
+5. 如果用户问与导师无关的问题，正常闲聊即可
+6. 回答要亲切自然，像朋友在聊天"""
 
     # 将 system prompt 作为第一条 system 消息
     messages = state.get("messages", [])

@@ -31,6 +31,7 @@ def init_db():
                 session_id TEXT PRIMARY KEY,
                 interest TEXT NOT NULL DEFAULT '{}',
                 goal TEXT NOT NULL DEFAULT '{}',
+                recommend_offset INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
                 updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
             );
@@ -174,6 +175,38 @@ def delete_profile(session_id: str):
     try:
         conn.execute("DELETE FROM profile_history WHERE session_id = ?", (session_id,))
         conn.execute("DELETE FROM profiles WHERE session_id = ?", (session_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ============================================================
+# 推荐偏移量管理（用于"换一批"功能）
+# ============================================================
+
+def get_recommend_offset(session_id: str) -> int:
+    """获取当前用户的推荐偏移量"""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "SELECT recommend_offset FROM profiles WHERE session_id = ?",
+            (session_id,)
+        )
+        row = cursor.fetchone()
+        if row and row["recommend_offset"] is not None:
+            return int(row["recommend_offset"])
+        return 0
+    finally:
+        conn.close()
+
+
+def set_recommend_offset(session_id: str, offset: int):
+    """设置当前用户的推荐偏移量"""
+    conn = get_connection()
+    try:
+        conn.execute("""
+            UPDATE profiles SET recommend_offset = ? WHERE session_id = ?
+        """, (offset, session_id))
         conn.commit()
     finally:
         conn.close()
