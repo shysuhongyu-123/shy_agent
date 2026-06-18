@@ -314,18 +314,28 @@ def profile_node(state: State):
 
 
 def confirm_profile_node(state: State):
-    """根据实际更新的内容生成确认语"""
+    """根据实际更新的内容生成确认语，区分正负权重"""
     info = state.get("analysis_result", {})
     interests = info.get("interests", [])
     goals = info.get("goals", [])
 
     parts = []
     if interests:
-        names = [NAME_MAP.get(i["name"], i["name"]) for i in interests]
-        parts.append("兴趣：" + "、".join(names))
+        for i in interests:
+            name = NAME_MAP.get(i["name"], i["name"])
+            weight = i.get("weight", 1.0)
+            if weight >= 0:
+                parts.append(f"兴趣：{name}")
+            else:
+                parts.append(f"不喜欢：{name}")
     if goals:
-        names = [NAME_MAP.get(g["name"], g["name"]) for g in goals]
-        parts.append("目标：" + "、".join(names))
+        for g in goals:
+            name = NAME_MAP.get(g["name"], g["name"])
+            weight = g.get("weight", 1.0)
+            if weight >= 0:
+                parts.append(f"目标：{name}")
+            else:
+                parts.append(f"不喜欢：{name}")
 
     if parts:
         confirm_text = "好的，我已记录您的" + "，".join(parts) + "。"
