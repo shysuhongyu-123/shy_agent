@@ -611,11 +611,67 @@ def reset_profile_node(state: State):
     }
 
 
+def load_teachers_data():
+    """加载导师 JSON 数据，返回精简后的列表"""
+    import json
+    teachers_path = os.path.join(BASE_DIR, "..", "gzhu_teachers.json")
+    try:
+        with open(teachers_path, "r", encoding="utf-8") as f:
+            teachers = json.load(f)
+        # 精简：只保留姓名、研究方向、课程（不暴露邮箱主页等隐私）
+        simplified = []
+        for t in teachers:
+            simplified.append({
+                "name": t.get("name", ""),
+                "research": t.get("research", []),
+                "courses": t.get("courses", [])
+            })
+        return simplified
+    except Exception as e:
+        print("加载导师数据失败:", e)
+        return []
+
+
 def chat_node(state: State):
-    # 聊天节点维护消息
+    # 加载导师数据和用户画像，注入到 system prompt 中
+    teachers = load_teachers_data()
+    session_id = state.get("session_id", "default")
+    profile = load_profile(session_id)
+
+    # 构建导师信息摘要（只取前 10 个作为参考，避免 token 过多）
+    teacher_summary = ""
+    for t in teachers[:10]:
+        research = "、".join(t.get("research", [])) or "暂无"
+        courses = "、".join(t.get("courses", [])) or "暂无"
+        teacher_summary += f"- {t['name']}：研究方向【{research}】，课程【{courses}】\n"
+
+    # 构建用户画像摘要
+    interests = get_sorted_profile(profile.get("interest", {}))
+    goals = get_sorted_profile(profile.get("goal", {}))
+    interest_text = "、".join([f"{NAME_MAP.get(n, n)}({d['composite_score']})" for n, d in interests[:3]]) or "暂无"
+    goal_text = "、".join([f"{NAME_MAP.get(n, n)}({d['composite_score']})" for n, d in goals[:3]]) or "暂无"
+
+    system_prompt = f"""你是广州大学机械与电气工程学院的智能导师推荐助手，热情、亲切、专业。
+你可以回答关于学院导师的任何问题，包括介绍导师的研究方向、课程等。
+
+当前用户的画像信息：
+- 兴趣方向：{interest_text}
+- 目标：{goal_text}
+
+以下是学院的部分导师信息（供你参考回答导师相关问题）：
+{teacher_summary}
+
+注意：
+1. 如果用户问"XXX老师怎么样"、"介绍一下XXX老师"，请根据导师信息回答
+2. 如果用户问的导师不在列表中，如实说"暂未找到该导师的信息"
+3. 如果用户问与导师无关的问题，正常闲聊即可
+4. 回答要亲切自然，像学长/学姐在聊天"""
+
+    # 将 system prompt 作为第一条 system 消息
     messages = state.get("messages", [])
+    chat_messages = [HumanMessage(content=system_prompt), HumanMessage(content=state["user_input"])]
+    response = llm.invoke(chat_messages)
     messages.append(HumanMessage(content=state["user_input"]))
-    response = llm.invoke(messages)
     messages.append(AIMessage(content=response.content))
 
     return {
