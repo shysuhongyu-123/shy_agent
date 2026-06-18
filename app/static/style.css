@@ -1,6 +1,7 @@
 /* ============================================================
-   广州大学机械与电气工程学院 — 导师推荐系统
-   现代化 UI 样式
+   Mario 帮你挑导师 — 广州大学机械与电气工程学院
+   马里奥经典配色 + 高级感设计
+   主色：红 #E52521 | 蓝 #049CD8 | 黄 #FBD000 | 绿 #049C4A
    ============================================================ */
 
 /* 基础重置 */
@@ -11,20 +12,28 @@
 }
 
 :root {
-    --primary: #1a237e;
-    --primary-light: #283593;
-    --primary-dark: #0d1b5e;
-    --accent: #448aff;
-    --accent-light: #82b1ff;
-    --bg-gradient-start: #0f0c29;
-    --bg-gradient-mid: #302b63;
-    --bg-gradient-end: #24243e;
-    --sidebar-bg: rgba(26, 35, 126, 0.95);
-    --chat-bg: #f0f2f5;
-    --bubble-user: linear-gradient(135deg, #1a237e, #3949ab);
+    --mario-red: #E52521;
+    --mario-red-dark: #C41E1A;
+    --mario-blue: #049CD8;
+    --mario-blue-dark: #037BB0;
+    --mario-yellow: #FBD000;
+    --mario-green: #049C4A;
+    --mario-green-dark: #037D3B;
+
+    --primary: var(--mario-red);
+    --primary-dark: var(--mario-red-dark);
+    --accent: var(--mario-blue);
+    --accent-dark: var(--mario-blue-dark);
+
+    --bg-gradient-start: #1a1a2e;
+    --bg-gradient-mid: #16213e;
+    --bg-gradient-end: #0f3460;
+    --sidebar-bg: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    --chat-bg: #f5f5f7;
+    --bubble-user: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
     --bubble-bot: #ffffff;
     --text-primary: #1a1a2e;
-    --text-secondary: #666;
+    --text-secondary: #555;
     --text-light: #999;
     --border-color: #e8eaed;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
@@ -41,26 +50,26 @@ body {
                  "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
     background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
     min-height: 100vh;
-    min-height: 100dvh; /* 动态视口高度，解决手机浏览器地址栏问题 */
+    min-height: 100dvh;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* 改为 flex-start 避免高度锁定 */
+    align-items: flex-start;
     padding: 20px;
-    overflow: hidden; /* 禁止 body 滚动，让内部容器滚动 */
+    overflow: hidden;
 }
 
 /* ============================================================
-   主容器 - 左右分栏布局
+   主容器
    ============================================================ */
 .app-container {
     width: 100%;
     max-width: 1200px;
     height: 90vh;
-    height: 90dvh; /* 动态视口高度 */
+    height: 90dvh;
     display: flex;
     border-radius: var(--radius-xl);
     overflow: hidden;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     animation: fadeIn 0.5s ease;
 }
 
@@ -75,7 +84,6 @@ body {
 .sidebar {
     width: 280px;
     background: var(--sidebar-bg);
-    backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     padding: 30px 24px;
@@ -87,11 +95,22 @@ body {
 .sidebar::before {
     content: '';
     position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(68, 138, 255, 0.1) 0%, transparent 70%);
+    top: -30%;
+    right: -30%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(4, 156, 216, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.sidebar::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: -20%;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(229, 37, 33, 0.06) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -105,35 +124,46 @@ body {
 .logo {
     width: 64px;
     height: 64px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 16px;
-    box-shadow: 0 4px 15px rgba(68, 138, 255, 0.3);
-    animation: pulse 2s infinite;
+    box-shadow: 0 4px 15px rgba(229, 37, 33, 0.3);
+    position: relative;
 }
 
-@keyframes pulse {
-    0%, 100% { box-shadow: 0 4px 15px rgba(68, 138, 255, 0.3); }
-    50% { box-shadow: 0 4px 25px rgba(68, 138, 255, 0.5); }
+.logo::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid rgba(251, 208, 0, 0.3);
+    animation: ringPulse 2s infinite;
+}
+
+@keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.08); opacity: 0.2; }
 }
 
 .logo i {
     font-size: 28px;
-    color: white;
+    color: var(--mario-yellow);
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
 }
 
 .sidebar-header h2 {
     color: white;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 4px;
+    letter-spacing: 0.5px;
 }
 
 .subtitle {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 12px;
     letter-spacing: 1px;
 }
@@ -153,23 +183,31 @@ body {
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-md);
     transition: all 0.3s ease;
     cursor: default;
+    border-left: 3px solid transparent;
 }
 
+.info-card:nth-child(1) { border-left-color: var(--mario-yellow); }
+.info-card:nth-child(2) { border-left-color: var(--mario-blue); }
+.info-card:nth-child(3) { border-left-color: var(--mario-green); }
+
 .info-card:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
     transform: translateX(4px);
 }
 
 .info-card i {
     font-size: 20px;
-    color: var(--accent-light);
     width: 24px;
     text-align: center;
 }
+
+.info-card:nth-child(1) i { color: var(--mario-yellow); }
+.info-card:nth-child(2) i { color: var(--mario-blue); }
+.info-card:nth-child(3) i { color: var(--mario-green); }
 
 .info-card span {
     color: rgba(255, 255, 255, 0.85);
@@ -187,14 +225,14 @@ body {
     display: flex;
     gap: 12px;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
 }
 
 .tip-card i {
     font-size: 24px;
-    color: var(--accent-light);
+    color: var(--mario-yellow);
     flex-shrink: 0;
     margin-top: 2px;
 }
@@ -207,7 +245,7 @@ body {
 }
 
 .tip-text p {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 12px;
     line-height: 1.8;
     font-style: italic;
@@ -222,7 +260,7 @@ body {
     flex-direction: column;
     background: var(--chat-bg);
     min-width: 0;
-    min-height: 0; /* 重要：允许 flex 子项收缩 */
+    min-height: 0;
 }
 
 /* 聊天头部 */
@@ -242,15 +280,27 @@ body {
     gap: 10px;
 }
 
-.header-left i {
-    font-size: 22px;
-    color: var(--primary);
+.mario-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(229, 37, 33, 0.25);
+}
+
+.mario-icon i {
+    font-size: 18px;
+    color: var(--mario-yellow);
 }
 
 .header-left span {
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
+    letter-spacing: 0.5px;
 }
 
 .header-right {
@@ -262,7 +312,7 @@ body {
 .status-dot {
     width: 8px;
     height: 8px;
-    background: #4caf50;
+    background: var(--mario-green);
     border-radius: 50%;
     animation: blink 1.5s infinite;
 }
@@ -283,15 +333,15 @@ body {
 .chat-box {
     flex: 1;
     overflow-y: auto;
-    overflow-y: overlay; /* 在支持浏览器上不占用宽度的滚动条 */
-    -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
-    overscroll-behavior: contain; /* 防止滚动穿透 */
+    overflow-y: overlay;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 20px;
     background: var(--chat-bg);
-    min-height: 0; /* 重要：允许 flex 子项收缩 */
+    min-height: 0;
 }
 
 .chat-box::-webkit-scrollbar {
@@ -317,7 +367,7 @@ body {
     flex-direction: column;
     max-width: 80%;
     animation: messageSlide 0.3s ease;
-    flex-shrink: 0; /* 防止消息被压缩 */
+    flex-shrink: 0;
 }
 
 @keyframes messageSlide {
@@ -355,7 +405,7 @@ body {
     margin-bottom: 4px;
 }
 
-/* 消息元信息（头像+时间） */
+/* 消息元信息 */
 .message-meta {
     display: flex;
     align-items: center;
@@ -371,11 +421,11 @@ body {
 }
 
 .message.user .message-meta i {
-    color: var(--primary);
+    color: var(--mario-red);
 }
 
 .message.bot .message-meta i {
-    color: var(--accent);
+    color: var(--mario-blue);
 }
 
 .message-meta .time {
@@ -398,7 +448,7 @@ body {
     background: var(--bubble-user);
     color: white;
     border-bottom-right-radius: 4px;
-    box-shadow: 0 2px 8px rgba(26, 35, 126, 0.2);
+    box-shadow: 0 2px 8px rgba(229, 37, 33, 0.2);
 }
 
 .message.bot .bubble {
@@ -410,7 +460,7 @@ body {
 }
 
 /* ============================================================
-   推荐导师按钮 — 对话框上方
+   推荐导师按钮
    ============================================================ */
 .recommend-bar {
     display: flex;
@@ -423,7 +473,7 @@ body {
     align-items: center;
     gap: 8px;
     padding: 10px 28px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
     color: white;
     border: none;
     border-radius: 25px;
@@ -431,12 +481,12 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 3px 12px rgba(26, 35, 126, 0.25);
+    box-shadow: 0 3px 12px rgba(229, 37, 33, 0.25);
 }
 
 .recommend-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(26, 35, 126, 0.35);
+    box-shadow: 0 6px 20px rgba(229, 37, 33, 0.35);
 }
 
 .recommend-btn:active {
@@ -455,21 +505,21 @@ body {
     align-items: center;
     gap: 6px;
     padding: 6px 14px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    background: linear-gradient(135deg, var(--mario-blue), var(--mario-blue-dark));
     color: white;
     border-radius: 20px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(68, 138, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(4, 156, 216, 0.2);
     user-select: none;
     margin-right: 12px;
 }
 
 .profile-badge:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(68, 138, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(4, 156, 216, 0.3);
 }
 
 .profile-badge i:first-child {
@@ -546,7 +596,7 @@ body {
 }
 
 .profile-popup-header i {
-    color: var(--accent);
+    color: var(--mario-blue);
 }
 
 .profile-popup-close {
@@ -620,7 +670,7 @@ body {
 
 .profile-btn-reset {
     background: #fff0f0;
-    color: #e53935;
+    color: var(--mario-red);
 }
 
 .profile-btn-reset:hover {
@@ -649,9 +699,9 @@ body {
 }
 
 .input-wrapper:focus-within {
-    border-color: var(--accent);
+    border-color: var(--mario-blue);
     background: white;
-    box-shadow: 0 0 0 3px rgba(68, 138, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(4, 156, 216, 0.1);
 }
 
 .input-wrapper textarea {
@@ -677,7 +727,7 @@ body {
     width: 42px;
     height: 42px;
     border: none;
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
     color: white;
     border-radius: var(--radius-sm);
     cursor: pointer;
@@ -690,7 +740,7 @@ body {
 
 .input-wrapper button:hover:not(:disabled) {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(26, 35, 126, 0.3);
+    box-shadow: 0 4px 12px rgba(229, 37, 33, 0.3);
 }
 
 .input-wrapper button:active:not(:disabled) {
@@ -715,8 +765,8 @@ body {
 }
 
 .tip {
-    padding: 5px 12px;
-    background: var(--chat-bg);
+    padding: 5px 14px;
+    background: white;
     border: 1px solid var(--border-color);
     border-radius: 20px;
     font-size: 12px;
@@ -727,11 +777,11 @@ body {
 }
 
 .tip:hover {
-    background: var(--accent);
+    background: var(--mario-blue);
     color: white;
-    border-color: var(--accent);
+    border-color: var(--mario-blue);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(68, 138, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(4, 156, 216, 0.2);
 }
 
 /* ============================================================
@@ -740,12 +790,12 @@ body {
 @media (max-width: 768px) {
     body {
         padding: 0;
-        align-items: stretch; /* 手机端拉伸填满 */
+        align-items: stretch;
     }
 
     .app-container {
         height: 100vh;
-        height: 100dvh; /* 动态视口高度，解决手机浏览器地址栏问题 */
+        height: 100dvh;
         border-radius: 0;
         flex-direction: column;
     }
@@ -771,7 +821,11 @@ body {
         width: 36px;
         height: 36px;
         margin: 0;
-        animation: none; /* 手机端去掉脉冲动画，减少性能消耗 */
+        animation: none;
+    }
+
+    .logo::after {
+        display: none;
     }
 
     .logo i {
@@ -791,7 +845,7 @@ body {
         flex-direction: row;
         flex-wrap: wrap;
         gap: 4px;
-        flex: none; /* 不拉伸 */
+        flex: none;
         width: 100%;
     }
 
@@ -800,6 +854,7 @@ body {
         flex: 1;
         min-width: 80px;
         gap: 6px;
+        border-left-width: 2px;
     }
 
     .info-card i {
@@ -815,7 +870,6 @@ body {
         display: none;
     }
 
-    /* 聊天区域 */
     .main-content {
         min-height: 0;
         flex: 1;
@@ -833,7 +887,6 @@ body {
         gap: 14px;
         flex: 1;
         min-height: 0;
-        /* 确保可滚动 */
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
@@ -854,7 +907,7 @@ body {
     }
 
     .input-wrapper textarea {
-        font-size: 16px; /* 防止 iOS 自动缩放 */
+        font-size: 16px;
         padding: 8px 10px;
     }
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>广州大学机械与电气工程学院 — 导师推荐系统</title>
+<title>Mario 帮你挑导师 — 广州大学机械与电气工程学院</title>
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -13,9 +13,9 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
-                <i class="fas fa-graduation-cap"></i>
+                <i class="fas fa-star"></i>
             </div>
-            <h2>导师推荐系统</h2>
+            <h2>Mario 帮你挑导师</h2>
             <p class="subtitle">广州大学 · 机械与电气工程学院</p>
         </div>
         <div class="sidebar-info">
@@ -50,8 +50,10 @@
     <main class="main-content">
         <div class="chat-header">
             <div class="header-left">
-                <i class="fas fa-robot"></i>
-                <span>智能助手</span>
+                <div class="mario-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <span>Mario</span>
             </div>
             <div class="header-right">
                 <!-- 查看画像按钮（可展开的小便签） -->
@@ -100,14 +102,14 @@
                 </button>
             </div>
             <div class="input-wrapper">
-                <textarea id="message" placeholder="输入你的想法，比如：我喜欢机器人..." rows="1"></textarea>
+                <textarea id="message" placeholder="说说你的想法，比如：我喜欢机器人..." rows="1"></textarea>
                 <button id="sendBtn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
             <div class="input-tips">
-                <span class="tip" onclick="quickFill('我不知道喜欢什么')">🤔 探索方向</span>
-                <span class="tip" onclick="quickFill('查看我的画像')">📋 查看画像</span>
+                <span class="tip" onclick="quickFill('我不知道喜欢什么')">探索方向</span>
+                <span class="tip" onclick="quickFill('查看我的画像')">查看画像</span>
             </div>
         </div>
     </main>
@@ -120,7 +122,6 @@
 function getUserId() {
     let userId = localStorage.getItem("gzhu_user_session_id");
     if (!userId) {
-        // 生成 UUID v4
         userId = crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
@@ -152,7 +153,6 @@ async function viewProfile() {
             })
         });
         let data = await response.json();
-        // 格式化显示
         let text = data.reply.replace(/\n/g, '<br>');
         body.innerHTML = `<div class="profile-content">${text}</div>`;
     } catch (e) {
@@ -191,7 +191,7 @@ window.onload = async function() {
         let data = await response.json();
         addBotMessage(data.reply);
     } catch (e) {
-        addBotMessage("你好！欢迎来到广州大学机械与电气工程学院导师推荐系统！请告诉我你的兴趣方向，我会为你推荐合适的导师。😊");
+        addBotMessage("你好呀，我是 Mario！欢迎来到广州大学机械与电气工程学院导师推荐系统。告诉我你的兴趣方向，我来帮你挑最合适的导师。");
     }
 };
 
@@ -200,7 +200,6 @@ async function sendMessage() {
     let text = input.value.trim();
     if (!text) return;
 
-    // 禁用发送按钮防止重复提交
     let btn = document.getElementById("sendBtn");
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -252,12 +251,11 @@ function addUserMessage(text) {
 function addBotMessage(text) {
     let box = document.getElementById("chat-box");
     let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
-    // 将文本中的换行转为 <br>
     let formattedText = escapeHtml(text).replace(/\n/g, '<br>');
     box.innerHTML += `
         <div class="message bot">
             <div class="message-meta">
-                <i class="fas fa-robot"></i>
+                <i class="fas fa-star"></i>
                 <span class="time">${time}</span>
             </div>
             <div class="message-content">
@@ -284,12 +282,10 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// 自动调整输入框高度
 document.getElementById("message").addEventListener("input", function() {
     autoResize(this);
 });
 
-// Enter 发送（Shift+Enter 换行）
 document.getElementById("message").addEventListener("keydown", function(e) {
     if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
