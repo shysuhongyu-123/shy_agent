@@ -54,6 +54,34 @@
                 <span>智能助手</span>
             </div>
             <div class="header-right">
+                <!-- 查看画像按钮（可展开的小便签） -->
+                <div class="profile-badge" id="profileBadge" onclick="toggleProfile()">
+                    <i class="fas fa-id-card"></i>
+                    <span>查看画像</span>
+                    <i class="fas fa-chevron-down badge-arrow"></i>
+                </div>
+                <!-- 画像内容浮窗 -->
+                <div class="profile-popup" id="profilePopup">
+                    <div class="profile-popup-header">
+                        <i class="fas fa-id-card"></i>
+                        <span>我的画像</span>
+                        <button class="profile-popup-close" onclick="toggleProfile()">&times;</button>
+                    </div>
+                    <div class="profile-popup-body" id="profilePopupBody">
+                        <div class="profile-loading">点击下方按钮查看画像</div>
+                    </div>
+                    <div class="profile-popup-footer">
+                        <button class="profile-btn profile-btn-view" onclick="viewProfile()">
+                            <i class="fas fa-sync-alt"></i> 刷新画像
+                        </button>
+                        <button class="profile-btn profile-btn-reset" onclick="resetProfile()">
+                            <i class="fas fa-trash-alt"></i> 重置画像
+                        </button>
+                    </div>
+                </div>
+                <!-- 遮罩层 -->
+                <div class="profile-overlay" id="profileOverlay" onclick="toggleProfile()"></div>
+
                 <span class="status-dot"></span>
                 <span class="status-text">在线</span>
             </div>
@@ -64,6 +92,13 @@
         </div>
 
         <div class="input-area">
+            <!-- 推荐导师按钮 — 放在对话框上方 -->
+            <div class="recommend-bar">
+                <button class="recommend-btn" onclick="quickFillAndSend('推荐导师')">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>推荐导师</span>
+                </button>
+            </div>
             <div class="input-wrapper">
                 <textarea id="message" placeholder="输入你的想法，比如：我喜欢机器人..." rows="1"></textarea>
                 <button id="sendBtn" onclick="sendMessage()">
@@ -71,10 +106,8 @@
                 </button>
             </div>
             <div class="input-tips">
-                <span class="tip" onclick="quickFill('我喜欢机器人')">🤖 机器人</span>
-                <span class="tip" onclick="quickFill('我想就业')">💼 就业</span>
+                <span class="tip" onclick="quickFill('我不知道喜欢什么')">🤔 探索方向</span>
                 <span class="tip" onclick="quickFill('查看我的画像')">📋 查看画像</span>
-                <span class="tip" onclick="quickFill('推荐导师')">🎯 推荐导师</span>
             </div>
         </div>
     </main>
@@ -97,7 +130,57 @@ function getUserId() {
     return userId;
 }
 
-// 页面加载时获取欢迎消息
+// ============================================================
+// 画像浮窗控制
+// ============================================================
+function toggleProfile() {
+    document.getElementById("profileBadge").classList.toggle("active");
+    document.getElementById("profilePopup").classList.toggle("show");
+    document.getElementById("profileOverlay").classList.toggle("show");
+}
+
+async function viewProfile() {
+    let body = document.getElementById("profilePopupBody");
+    body.innerHTML = '<div class="profile-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>';
+    try {
+        let response = await fetch("/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                message: "查看我的画像",
+                session_id: getUserId()
+            })
+        });
+        let data = await response.json();
+        // 格式化显示
+        let text = data.reply.replace(/\n/g, '<br>');
+        body.innerHTML = `<div class="profile-content">${text}</div>`;
+    } catch (e) {
+        body.innerHTML = '<div class="profile-loading">加载失败，请重试</div>';
+    }
+}
+
+async function resetProfile() {
+    if (!confirm("确定要清空所有画像信息吗？")) return;
+    let body = document.getElementById("profilePopupBody");
+    body.innerHTML = '<div class="profile-loading"><i class="fas fa-spinner fa-spin"></i> 重置中...</div>';
+    try {
+        let response = await fetch("/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                message: "重置我的画像",
+                session_id: getUserId()
+            })
+        });
+        let data = await response.json();
+        body.innerHTML = `<div class="profile-content">${data.reply}</div>`;
+    } catch (e) {
+        body.innerHTML = '<div class="profile-loading">重置失败，请重试</div>';
+    }
+}
+
+// 页面加载时自动查看画像
 window.onload = async function() {
     try {
         let response = await fetch("/welcome", {
@@ -143,6 +226,11 @@ async function sendMessage() {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
     }
+}
+
+function quickFillAndSend(text) {
+    document.getElementById("message").value = text;
+    sendMessage();
 }
 
 function addUserMessage(text) {
