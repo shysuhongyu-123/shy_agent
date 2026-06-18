@@ -24,6 +24,7 @@ if os.path.exists(env_path):
 from flask import Flask, request, jsonify, render_template, redirect
 from app.agent.trying import run_agent, get_welcome_message
 from app.user_db import register_user, login_user, validate_token, logout_user
+from app.logger import logger, send_error_alert
 
 # 指定模板和静态文件夹路径
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +55,28 @@ def get_session_id():
 
 
 # ============================================================
+# 全局异常捕获
+# ============================================================
+
+@app.errorhandler(500)
+def handle_500(error):
+    """捕获 500 错误，记录日志并发送告警邮件"""
+    request_info = f"URL: {request.url}\nMethod: {request.method}\nIP: {request.remote_addr}"
+    logger.error("500 错误: %s\n%s", str(error), request_info)
+    send_error_alert(str(error), request_info)
+    return jsonify({"reply": "抱歉，服务器内部错误，请稍后再试。"}), 500
+
+
+@app.errorhandler(Exception)
+def handle_uncaught(error):
+    """捕获所有未处理的异常"""
+    request_info = f"URL: {request.url}\nMethod: {request.method}\nIP: {request.remote_addr}"
+    logger.error("未捕获异常: %s\n%s", str(error), request_info)
+    send_error_alert(str(error), request_info)
+    return jsonify({"reply": "抱歉，系统遇到了一些问题，请稍后再试。"}), 500
+
+
+# ============================================================
 # 认证相关路由
 # ============================================================
 
@@ -70,6 +93,7 @@ def api_register():
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
     result = register_user(username, password)
+    logger.info("用户注册: %s -> %s", username, result.get("message"))
     return jsonify(result)
 
 
@@ -80,6 +104,10 @@ def api_login():
     username = data.get("username", "").strip()
     password = data.get("password", "").strip()
     result = login_user(username, password)
+    if result.get("success"):
+        logger.info("用户登录成功: %s", username)
+    else:
+        logger.warning("用户登录失败: %s - %s", username, result.get("message"))
     return jsonify(result)
 
 
@@ -98,6 +126,7 @@ def api_logout():
     data = request.get_json()
     token = data.get("token", "")
     logout_user(token)
+    logger.info("用户登出: token=%s...", token[:16] if token else "none")
     return jsonify({"success": True})
 
 
@@ -122,6 +151,7 @@ def index():
 def welcome():
     """返回个性化欢迎引导消息"""
     session_id = get_session_id()
+    logger.info("欢迎消息: session=%s", session_id)
     welcome_text = get_welcome_message(session_id)
     # 为每个新会话初始化消息列表
     sessions[session_id] = [{"role": "assistant", "content": welcome_text}]
@@ -136,6 +166,8 @@ def chat():
         return jsonify({"reply": "请输入内容"})
 
     session_id = get_session_id()
+    logger.info("聊天请求: session=%s, message=%s", session_id, user_input[:50])
+
     # 获取该会话的历史消息（转换为 LangChain 消息格式）
     history = sessions.get(session_id, [])
     from langchain_core.messages import HumanMessage, AIMessage
@@ -147,20 +179,26 @@ def chat():
         elif msg["role"] == "assistant":
             messages.append(AIMessage(content=msg["content"]))
 
-    # 调用 agent（传入 session_id 以支持多用户隔离）
-    response, updated_messages = run_agent(user_input, messages, session_id=session_id)
+    try:
+        # 调用 agent（传入 session_id 以支持多用户隔离）
+        response, updated_messages = run_agent(user_input, messages, session_id=session_id)
 
-    # 更新会话历史
-    history.append({"role": "user", "content": user_input})
-    history.append({"role": "assistant", "content": response})
-    sessions[session_id] = history
+        # 更新会话历史
+        history.append({"role": "user", "content": user_input})
+        history.append({"role": "assistant", "content": response})
+        sessions[session_id] = history
 
-    return jsonify({"reply": response})
+        logger.info("聊天回复: session=%s, 长度=%d", session_id, len(response))
+        return jsonify({"reply": response})
+    except Exception as e:
+        logger.error("聊天处理异常: session=%s, error=%s", session_id, str(e))
+        send_error_alert(str(e), f"session_id={session_id}, user_input={user_input[:100]}")
+        return jsonify({"reply": "抱歉，我遇到了一些问题，请稍后再试。"})
 
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("  广州大学机械与电气工程学院 — 智能导师推荐系统")
-    print("  Web 界面: http://127.0.0.1:5000")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("  广州大学机械与电气工程学院 — 智能导师推荐系统")
+    logger.info("  Web 界面: http://127.0.0.1:5000")
+    logger.info("=" * 60)
     app.run(debug=True, host="0.0.0.0", port=5000)

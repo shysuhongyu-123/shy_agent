@@ -3,6 +3,8 @@ import os
 import re
 from typing import List, Dict
 
+from app.logger import logger
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEACHERS_JSON = os.path.join(BASE_DIR, "gzhu_teachers.json")
 
@@ -193,12 +195,10 @@ def load_teachers() -> List[Dict]:
     try:
         with open(TEACHERS_JSON, "r", encoding="utf-8") as f:
             teachers = json.load(f)
-        print(f"导师数量: {len(teachers)}")
-        if teachers:
-            print(teachers[0])
+        logger.info("导师数量: %d", len(teachers))
         return teachers
     except Exception as e:
-        print("加载导师数据失败:", e)
+        logger.error("加载导师数据失败: %s", str(e))
         return []
 
 
@@ -329,7 +329,7 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
                             research_score += weight * score
                             break
             except Exception as e:
-                print(f"[retriever] LLM语义匹配失败: {e}")
+                logger.error("LLM语义匹配失败: %s", str(e))
 
     # ========== 第二部分：课程-目标匹配 ==========
     courses = teacher.get("courses", [])

@@ -16,6 +16,7 @@ from app.profile_db import (
     add_history as db_add_history,
     check_recent_history as db_check_recent_history
 )
+from app.logger import logger
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -150,7 +151,7 @@ def intent_node(state: State):
     intent = response.content.strip().lower()
     if intent not in ("show_profile", "update_profile", "recommend", "chat", "explore", "reset_profile"):
         intent = "chat"
-    print("\n意图识别：", intent)
+    logger.info("意图识别: %s", intent)
     return {"intent": intent}
 
 
@@ -204,12 +205,11 @@ def extract_profile(message):
 7. 只返回 JSON，不要解释、不要额外文本
 """
     response = llm.invoke(prompt)
-    print("\n画像结果")
-    print(response.content)
+    logger.info("画像提取结果: %s", response.content[:200])
     try:
         return json.loads(response.content)
     except Exception as e:
-        print("JSON解析失败：", e)
+        logger.error("JSON解析失败: %s", str(e))
         return {
             "interests": [],
             "goals": []
@@ -300,8 +300,7 @@ def update_profile(profile, message):
 
 def profile_node(state: State):
     profile, profile_info = update_profile(state["user_profile"], state["user_input"])
-    print("\n画像更新后:")
-    print(profile)
+    logger.info("画像更新后: %s", str({k: list(v.keys()) for k, v in profile.items() if isinstance(v, dict)}))
     # 将提取的信息暂存到 analysis_result，供 confirm 使用
     return {
         "user_profile": profile,
@@ -496,18 +495,17 @@ def recommend_node(state: State):
 
     try:
         # 打印画像信息用于调试
-        print(f"[recommend_node] session_id={session_id}")
-        print(f"[recommend_node] interest keys: {list(profile.get('interest', {}).keys())}")
-        for k, v in profile.get("interest", {}).items():
-            print(f"[recommend_node]   {k}: composite_score={v.get('composite_score', 'N/A')}")
-        print(f"[recommend_node] goal keys: {list(profile.get('goal', {}).keys())}")
+        logger.info("推荐导师: session=%s, interest=%s, goal=%s",
+                     session_id,
+                     list(profile.get('interest', {}).keys()),
+                     list(profile.get('goal', {}).keys()))
 
         # 1. 用推荐算法对所有导师打分排序，取前30个
         all_scored = recommend_teachers(profile, top_n=30)
-        print(f"[recommend_node] all_scored count: {len(all_scored)}")
+        logger.info("推荐导师: 候选数量=%d", len(all_scored))
 
         if not all_scored:
-            print("[recommend_node] 没有匹配到任何导师！")
+            logger.warning("推荐导师: 没有匹配到任何导师！")
             reply = "抱歉，暂时没有匹配到合适的导师。您可以先告诉我您的兴趣方向，我来帮您匹配。"
             messages = state.get("messages", []) + [
                 HumanMessage(content=state["user_input"]),
@@ -595,9 +593,7 @@ def recommend_node(state: State):
         }
     except Exception as e:
         # 兜底：如果推荐出错，返回友好提示
-        print("推荐导师出错:", e)
-        import traceback
-        traceback.print_exc()
+        logger.error("推荐导师出错: %s", str(e), exc_info=True)
         reply = "抱歉，推荐导师时遇到了一些问题。请稍后再试，或者先告诉我您的兴趣方向。"
         messages = state.get("messages", []) + [
             HumanMessage(content=state["user_input"]),
