@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 — Mario 帮你挑导师</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-container {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.auth-header .logo {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 28px;
+    color: white;
+}
+
+.auth-header h1 {
+    color: #f1f5f9;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.auth-header p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.form-group .input-wrapper {
+    position: relative;
+}
+
+.form-group .input-wrapper i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 16px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: #f1f5f9;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.form-group input:focus {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.form-group input::placeholder {
+    color: #475569;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+}
+
+.auth-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+.auth-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.auth-btn i {
+    margin-right: 8px;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 24px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.auth-switch a {
+    color: #60a5fa;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
+
+.error-msg {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.error-msg.show {
+    display: block;
+}
+
+.success-msg {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #86efac;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.success-msg.show {
+    display: block;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.password-toggle:hover {
+    color: #94a3b8;
+}
+</style>
+</head>
+<body>
+<div class="auth-container" id="authContainer">
+    <div class="auth-header">
+        <div class="logo">
+            <i class="fas fa-robot"></i>
+        </div>
+        <h1 id="authTitle">登录</h1>
+        <p id="authSubtitle">广州大学 · 机械与电气工程学院</p>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="success-msg" id="successMsg"></div>
+
+    <form id="authForm" onsubmit="return handleSubmit(event)">
+        <div class="form-group">
+            <label>用户名</label>
+            <div class="input-wrapper">
+                <i class="fas fa-user"></i>
+                <input type="text" id="username" placeholder="请输入用户名" required autocomplete="username">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>密码</label>
+            <div class="input-wrapper">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="请输入密码" required autocomplete="current-password">
+                <i class="fas fa-eye password-toggle" onclick="togglePassword()" id="passwordToggle"></i>
+            </div>
+        </div>
+
+        <button type="submit" class="auth-btn" id="authBtn">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>登录</span>
+        </button>
+    </form>
+
+    <div class="auth-switch" id="authSwitch">
+        <span>还没有账号？</span>
+        <a onclick="switchMode()">立即注册</a>
+    </div>
+</div>
+
+<script>
+let isLoginMode = true;
+
+function togglePassword() {
+    const input = document.getElementById("password");
+    const icon = document.getElementById("passwordToggle");
+    if (input.type === "password") {
+        input.type = "text";
+        icon.className = "fas fa-eye-slash password-toggle";
+    } else {
+        input.type = "password";
+        icon.className = "fas fa-eye password-toggle";
+    }
+}
+
+function switchMode() {
+    isLoginMode = !isLoginMode;
+    const title = document.getElementById("authTitle");
+    const subtitle = document.getElementById("authSubtitle");
+    const btn = document.getElementById("authBtn");
+    const switchText = document.getElementById("authSwitch");
+    const errorMsg = document.getElementById("errorMsg");
+    const successMsg = document.getElementById("successMsg");
+
+    errorMsg.classList.remove("show");
+    successMsg.classList.remove("show");
+
+    if (isLoginMode) {
+        title.textContent = "登录";
+        subtitle.textContent = "广州大学 · 机械与电气工程学院";
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>登录</span>';
+        switchText.innerHTML = '还没有账号？<a onclick="switchMode()">立即注册</a>';
+    } else {
+        title.textContent = "注册";
+        subtitle.textContent = "创建账号，保存你的导师推荐画像";
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> <span>注册</span>';
+        switchText.innerHTML = '已有账号？<a onclick="switchMode()">立即登录</a>';
+    }
+}
+
+async function handleSubmit(event) {
+    event.preventDefault();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const btn = document.getElementById("authBtn");
+    const errorMsg = document.getElementById("errorMsg");
+    const successMsg = document.getElementById("successMsg");
+
+    errorMsg.classList.remove("show");
+    successMsg.classList.remove("show");
+
+    if (!username || !password) {
+        errorMsg.textContent = "请填写用户名和密码";
+        errorMsg.classList.add("show");
+        return false;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>处理中...</span>';
+
+    try {
+        const endpoint = isLoginMode ? "/api/login" : "/api/register";
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username, password})
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            if (isLoginMode) {
+                // 登录成功，保存 token 并跳转到聊天页面
+                localStorage.setItem("gzhu_auth_token", data.token);
+                localStorage.setItem("gzhu_username", data.username);
+                window.location.href = "/";
+            } else {
+                // 注册成功，切换到登录模式
+                successMsg.textContent = "注册成功！请登录";
+                successMsg.classList.add("show");
+                switchMode();
+                document.getElementById("password").value = "";
+            }
+        } else {
+            errorMsg.textContent = data.message;
+            errorMsg.classList.add("show");
+        }
+    } catch (e) {
+        errorMsg.textContent = "网络错误，请稍后重试";
+        errorMsg.classList.add("show");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = isLoginMode
+            ? '<i class="fas fa-sign-in-alt"></i> <span>登录</span>'
+            : '<i class="fas fa-user-plus"></i> <span>注册</span>';
+    }
+    return false;
+}
+
+// 如果已经登录，直接跳转到聊天页面
+window.onload = function() {
+    const token = localStorage.getItem("gzhu_auth_token");
+    if (token) {
+        // 验证 token 是否有效
+        fetch("/api/verify", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({token})
+        }).then(r => r.json()).then(data => {
+            if (data.valid) {
+                window.location.href = "/";
+            } else {
+                localStorage.removeItem("gzhu_auth_token");
+                localStorage.removeItem("gzhu_username");
+            }
+        }).catch(() => {});
+    }
+};
+</script>
+</body>
+</html>

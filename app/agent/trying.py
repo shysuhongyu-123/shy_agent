@@ -22,7 +22,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-# 从环境变量读取 API Key（PythonAnywhere 上通过 Web 面板设置）
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 if not DEEPSEEK_API_KEY:
     raise ValueError(
@@ -32,11 +31,6 @@ if not DEEPSEEK_API_KEY:
     )
 os.environ["DEEPSEEK_API_KEY"] = DEEPSEEK_API_KEY
 
-# ============================================================
-# 画像标签定义（基于广州大学机械与电气工程学院实际研究方向）
-# ============================================================
-
-# 兴趣标签（研究方向）
 INTEREST_MAP = {
     "robotics": "机器人",
     "control": "机械控制",

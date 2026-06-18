@@ -21,8 +21,9 @@ if os.path.exists(env_path):
                 if key not in os.environ:
                     os.environ[key] = value
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect
 from app.agent.trying import run_agent, get_welcome_message
+from app.user_db import register_user, login_user, validate_token, logout_user
 
 # 指定模板和静态文件夹路径
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,15 +36,86 @@ sessions = {}
 
 
 def get_session_id():
-    """获取会话 ID，用于多用户隔离"""
-    # 优先使用前端传来的 session_id，否则用 IP 地址
+    """
+    从请求中获取用户标识。
+    优先使用 token 对应的 username，否则用 IP 地址。
+    """
     data = request.get_json(silent=True) or {}
-    return data.get("session_id") or request.remote_addr or "default"
+    token = data.get("token") or request.headers.get("Authorization", "").replace("Bearer ", "")
+    if token:
+        result = validate_token(token)
+        if result["valid"]:
+            return f"user_{result['username']}"
+    # 兼容旧版：前端传来的 session_id
+    session_id = data.get("session_id")
+    if session_id:
+        return session_id
+    return request.remote_addr or "default"
 
+
+# ============================================================
+# 认证相关路由
+# ============================================================
+
+@app.route("/login")
+def login_page():
+    """登录页面"""
+    return render_template("login.html")
+
+
+@app.route("/api/register", methods=["POST"])
+def api_register():
+    """注册 API"""
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+    result = register_user(username, password)
+    return jsonify(result)
+
+
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    """登录 API"""
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+    result = login_user(username, password)
+    return jsonify(result)
+
+
+@app.route("/api/verify", methods=["POST"])
+def api_verify():
+    """验证 token 是否有效"""
+    data = request.get_json()
+    token = data.get("token", "")
+    result = validate_token(token)
+    return jsonify(result)
+
+
+@app.route("/api/logout", methods=["POST"])
+def api_logout():
+    """登出 API"""
+    data = request.get_json()
+    token = data.get("token", "")
+    logout_user(token)
+    return jsonify({"success": True})
+
+
+# ============================================================
+# 聊天相关路由
+# ============================================================
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    """主页面（聊天界面），未登录则跳转到登录页"""
+    # 检查是否已登录（通过 query 参数或 header）
+    token = request.args.get("token") or request.headers.get("Authorization", "").replace("Bearer ", "")
+    if token:
+        result = validate_token(token)
+        if result["valid"]:
+            return render_template("index.html", username=result["username"])
+    # 前端会通过 localStorage 中的 token 来判断是否已登录
+    return render_template("index.html", username="")
 
 
 @app.route("/welcome", methods=["POST"])
