@@ -339,7 +339,7 @@ async function handleSubmit(event) {
     return false;
 }
 
-// 如果已经登录，直接跳转到聊天页面
+// 如果已经登录，直接跳转到聊天页面（带上 token 参数）
 window.onload = function() {
     const token = localStorage.getItem("gzhu_auth_token");
     if (token) {
@@ -350,7 +350,7 @@ window.onload = function() {
             body: JSON.stringify({token})
         }).then(r => r.json()).then(data => {
             if (data.valid) {
-                window.location.href = "/";
+                window.location.href = "/?token=" + encodeURIComponent(token);
             } else {
                 localStorage.removeItem("gzhu_auth_token");
                 localStorage.removeItem("gzhu_username");

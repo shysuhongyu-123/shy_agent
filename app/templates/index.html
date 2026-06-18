@@ -160,9 +160,17 @@ function getUserId() {
 }
 
 function checkAuth() {
+    // 优先从 URL 参数获取 token（从登录页跳转过来时）
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get("token");
+    if (urlToken) {
+        localStorage.setItem("gzhu_auth_token", urlToken);
+        // 清除 URL 参数，避免刷新后重复处理
+        window.history.replaceState({}, "", "/");
+    }
+
     const token = getAuthToken();
     if (!token) {
-        // 未登录，跳转到登录页
         window.location.href = "/login";
         return false;
     }

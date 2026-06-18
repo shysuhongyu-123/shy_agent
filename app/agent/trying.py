@@ -165,7 +165,7 @@ def save_profile(profile: dict, session_id: str = "default"):
 
 
 def extract_profile(message):
-    # 构建兴趣标签列表供 LLM 参考
+    # 构建兴趣标签列表供 LLM 参考（仅作为示例，不限制输出）
     interest_options = ", ".join([f"{k}({v})" for k, v in INTEREST_MAP.items()])
     goal_options = ", ".join([f"{k}({v})" for k, v in GOAL_MAP.items()])
 
@@ -174,32 +174,34 @@ def extract_profile(message):
 用户输入:
 {message}
 
-可用的兴趣标签（interest）只能是以下之一：
+预定义的兴趣标签（仅作参考，不强制使用）：
 {interest_options}
 
-可用的目标标签（goal）只能是以下之一：
+预定义的目标标签（仅作参考，不强制使用）：
 {goal_options}
 
 规则：
 1. 支持一次消息提到多个兴趣/目标
-2. 支持正负权重，**特别注意否定表达**：
+2. **重要：如果用户说的兴趣不在预定义列表中，请使用用户的原话作为 name（中文），并设置 weight。** 例如用户说"我喜欢数字媒体"，则输出 {{"name":"数字媒体","weight":1.0}}
+3. 支持正负权重，**特别注意否定表达**：
    - "喜欢/有兴趣/感兴趣/想学/想了解" => 正权重 0.2~1.0
    - **"不喜欢/没兴趣/不考虑/不想学/不感兴趣/不喜欢了/不想"** => 负权重 -0.5~-1.0
    - **"我又不喜欢XXX了"、"我不喜欢XXX了"、"对XXX没兴趣了"** => 负权重 -1.0
    - "不想就业/放弃就业/不考虑就业" => employment:-1
-3. **重要：如果用户说"不喜欢XXX"，必须提取为负权重，不能提取为正权重！**
-4. 输出格式必须严格如下 JSON：
+4. **重要：如果用户说"不喜欢XXX"，必须提取为负权重，不能提取为正权重！**
+5. 输出格式必须严格如下 JSON：
 {{
   "interests": [
     {{"name":"robotics","weight":1.0}},
+    {{"name":"数字媒体","weight":1.0}},
     {{"name":"ai","weight":0.8}}
   ],
   "goals": [
     {{"name":"phd","weight":1.0}}
   ]
 }}
-5. 如果消息没有提到兴趣或目标，则返回空数组
-6. 只返回 JSON，不要解释、不要额外文本
+6. 如果消息没有提到兴趣或目标，则返回空数组
+7. 只返回 JSON，不要解释、不要额外文本
 """
     response = llm.invoke(prompt)
     print("\n画像结果")

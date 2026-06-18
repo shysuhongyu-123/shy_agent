@@ -245,29 +245,93 @@ def calculate_course_goal_score(courses: List[str], goal_tag: str) -> float:
     return round(min(base_score + course_count_bonus, 1.0), 2)
 
 
+# 全局 LLM 实例（延迟初始化，避免循环导入）
+_llm = None
+
+
+def _get_llm():
+    global _llm
+    if _llm is None:
+        from langchain_openai import ChatOpenAI
+        api_key = os.environ.get("DEEPSEEK_API_KEY")
+        if api_key:
+            _llm = ChatOpenAI(
+                model="deepseek-chat",
+                base_url="https://api.deepseek.com",
+                api_key=api_key,
+                temperature=0.3,
+                max_tokens=512
+            )
+    return _llm
+
+
 def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
     """
     综合评分 = 研究方向匹配分 × 0.7 + 课程-目标匹配分 × 0.3
+
+    对于预定义标签，使用关键词匹配。
+    对于自由文本标签（不在 KEYWORD_MAP 中的），使用 LLM 做语义匹配。
     """
-    # ========== 第一部分：研究方向匹配（原有算法） ==========
+    # ========== 第一部分：研究方向匹配 ==========
     research_score = 0
     text = " ".join(teacher.get("research", []) + teacher.get("courses", []))
+
+    # 收集需要 LLM 语义匹配的自由文本标签
+    free_text_interests = []
 
     # 兴趣权重
     for profile_tag, info in user_profile.get("interest", {}).items():
         weight = info.get("composite_score", 0)
-        keywords = KEYWORD_MAP.get(profile_tag, [])
-        if any(kw in text for kw in keywords):
-            research_score += weight
+        if profile_tag in KEYWORD_MAP:
+            # 预定义标签：关键词匹配
+            keywords = KEYWORD_MAP.get(profile_tag, [])
+            if any(kw in text for kw in keywords):
+                research_score += weight
+        else:
+            # 自由文本标签：收集起来，稍后用 LLM 批量匹配
+            free_text_interests.append((profile_tag, weight))
 
-    # 目标权重（原有：目标标签在研究方向中的匹配）
+    # 目标权重
     for profile_tag, info in user_profile.get("goal", {}).items():
         weight = info.get("composite_score", 0)
-        keywords = KEYWORD_MAP.get(profile_tag, [])
-        if any(kw in text for kw in keywords):
-            research_score += weight
+        if profile_tag in KEYWORD_MAP:
+            keywords = KEYWORD_MAP.get(profile_tag, [])
+            if any(kw in text for kw in keywords):
+                research_score += weight
+        else:
+            free_text_interests.append((profile_tag, weight))
 
-    # ========== 第二部分：课程-目标匹配（新增） ==========
+    # 用 LLM 做语义匹配（批量处理，减少 API 调用）
+    if free_text_interests:
+        llm = _get_llm()
+        if llm:
+            interest_desc = "、".join([f"{name}(权重{weight})" for name, weight in free_text_interests])
+            teacher_research = "、".join(teacher.get("research", []))
+            teacher_courses = "、".join(teacher.get("courses", []))
+            prompt = f"""判断以下用户兴趣与导师的研究方向/课程是否相关。
+只返回一个 JSON 数组，每个元素包含 name 和 score（0.0~1.0，1.0表示高度相关）。
+
+用户兴趣：{interest_desc}
+导师研究方向：{teacher_research}
+导师课程：{teacher_courses}
+
+输出格式：[{{"name":"兴趣名","score":0.8}}]
+如果都不相关，返回 []。只返回 JSON，不要解释。"""
+            try:
+                resp = llm.invoke(prompt)
+                matches = json.loads(resp.content)
+                for m in matches:
+                    name = m["name"]
+                    score = float(m.get("score", 0))
+                    # 找到对应的权重
+                    for tag_name, weight in free_text_interests:
+                        if tag_name == name:
+                            research_score += weight * score
+                            break
+            except Exception as e:
+                print(f"[retriever] LLM语义匹配失败: {e}")
+
+    # ========== 第二部分：课程-目标匹配 ==========
     courses = teacher.get("courses", [])
     course_goal_score = 0
     goal_count = 0
@@ -279,15 +343,12 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
             course_goal_score += goal_course_score * goal_weight
             goal_count += 1
 
-    # 如果没有目标，课程-目标分为0
     if goal_count > 0:
-        course_goal_score = course_goal_score / goal_count  # 平均
+        course_goal_score = course_goal_score / goal_count
     else:
         course_goal_score = 0
 
     # ========== 综合 ==========
-    # 归一化：research_score 可能较大，取 sigmoid 风格压缩
-    # 但为了保持与原有算法兼容，保留原有分数，只加权组合
     final_score = research_score * 0.7 + course_goal_score * 2.0 * 0.3
 
     return round(final_score, 2)
