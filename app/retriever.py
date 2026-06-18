@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import List, Dict
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -146,6 +147,47 @@ KEYWORD_MAP = {
     ]
 }
 
+# ============================================================
+# 课程-目标匹配规则
+# 根据导师的课程名称，评估该课程对学生目标的帮助程度
+# ============================================================
+# 就业导向关键词：课程名称中包含这些词，说明对就业有帮助
+EMPLOYMENT_KEYWORDS = [
+    "应用", "技术", "工程", "设计", "制造", "实践", "实训",
+    "编程", "开发", "系统", "自动化", "检测", "控制",
+    "单片机", "PLC", "嵌入式", "CAD", "CAM", "SolidWorks",
+    "LabVIEW", "MATLAB", "C语言", "Python", "电路", "电子",
+    "驱动", "机器人", "数控", "仿真", "创新", "发明",
+    "项目管理", "企业管理", "市场营销", "专业英语"
+]
+
+# 考研导向关键词
+MASTER_KEYWORDS = [
+    "高等", "理论", "原理", "力学", "数学", "矩阵论",
+    "现代控制", "信号与系统", "数字信号", "复变函数",
+    "计算方法", "运筹", "优化", "机器学习", "深度学习",
+    "人工智能", "神经网络", "机器人学", "自动控制原理",
+    "现代控制理论", "非线性控制", "智能控制"
+]
+
+# 读博/科研导向关键词
+PHD_KEYWORDS = [
+    "高等", "前沿", "研讨", "论文", "科研", "创新",
+    "现代控制理论", "非线性控制", "智能控制", "机器学习",
+    "深度学习", "神经网络", "机器人学", "信号处理",
+    "数值计算", "计算方法", "矩阵论", "高等工程力学",
+    "高等机构学", "故障诊断学", "专家系统", "系统工程",
+    "多智能体", "协同控制", "网络安全", "信息物理"
+]
+
+# 竞赛导向关键词
+COMPETITION_KEYWORDS = [
+    "创新", "发明", "设计", "机器人", "单片机", "嵌入式",
+    "编程", "C语言", "Python", "智能", "电子", "电路",
+    "机械设计", "数控", "3D打印", "SolidWorks", "LabVIEW",
+    "MATLAB", "竞赛", "实训", "实践"
+]
+
 
 def load_teachers() -> List[Dict]:
     try:
@@ -160,11 +202,55 @@ def load_teachers() -> List[Dict]:
         return []
 
 
+def calculate_course_goal_score(courses: List[str], goal_tag: str) -> float:
+    """
+    根据导师的课程信息，评估该导师的课程对学生特定目标的帮助程度。
+    返回 0.0 ~ 1.0 的分数。
+    """
+    if not courses:
+        return 0.0
+
+    # 将所有课程合并为一段文本
+    course_text = " ".join(courses)
+
+    # 根据目标选择关键词列表
+    if goal_tag == "employment":
+        keywords = EMPLOYMENT_KEYWORDS
+    elif goal_tag == "master":
+        keywords = MASTER_KEYWORDS
+    elif goal_tag == "phd":
+        keywords = PHD_KEYWORDS
+    elif goal_tag == "competition":
+        keywords = COMPETITION_KEYWORDS
+    elif goal_tag == "research":
+        # 科研与读博类似
+        keywords = PHD_KEYWORDS
+    elif goal_tag == "entrepreneurship":
+        # 创业：关注创新、管理、市场类课程
+        keywords = ["创新", "发明", "管理", "市场", "创业", "项目", "设计", "产品"]
+    else:
+        return 0.0
+
+    # 计算匹配的关键词数量
+    matched_count = 0
+    for kw in keywords:
+        if kw in course_text:
+            matched_count += 1
+
+    # 归一化：匹配数 / 总关键词数，但上限为 1.0
+    # 同时考虑课程数量：课程越多，说明该导师教学覆盖面广
+    course_count_bonus = min(len(courses) / 10.0, 0.2)  # 最多加 0.2
+    base_score = min(matched_count / max(len(keywords) * 0.3, 1), 1.0)
+
+    return round(min(base_score + course_count_bonus, 1.0), 2)
+
+
 def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
     """
-    修复：每个画像标签只计一次分，避免关键词重复加分。
+    综合评分 = 研究方向匹配分 × 0.7 + 课程-目标匹配分 × 0.3
     """
-    score = 0
+    # ========== 第一部分：研究方向匹配（原有算法） ==========
+    research_score = 0
     text = " ".join(teacher.get("research", []) + teacher.get("courses", []))
 
     # 兴趣权重
@@ -172,16 +258,39 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
         weight = info.get("composite_score", 0)
         keywords = KEYWORD_MAP.get(profile_tag, [])
         if any(kw in text for kw in keywords):
-            score += weight
+            research_score += weight
 
-    # 目标权重
+    # 目标权重（原有：目标标签在研究方向中的匹配）
     for profile_tag, info in user_profile.get("goal", {}).items():
         weight = info.get("composite_score", 0)
         keywords = KEYWORD_MAP.get(profile_tag, [])
         if any(kw in text for kw in keywords):
-            score += weight
+            research_score += weight
 
-    return round(score, 2)
+    # ========== 第二部分：课程-目标匹配（新增） ==========
+    courses = teacher.get("courses", [])
+    course_goal_score = 0
+    goal_count = 0
+
+    for goal_tag, info in user_profile.get("goal", {}).items():
+        goal_weight = info.get("composite_score", 0)
+        if goal_weight > 0:
+            goal_course_score = calculate_course_goal_score(courses, goal_tag)
+            course_goal_score += goal_course_score * goal_weight
+            goal_count += 1
+
+    # 如果没有目标，课程-目标分为0
+    if goal_count > 0:
+        course_goal_score = course_goal_score / goal_count  # 平均
+    else:
+        course_goal_score = 0
+
+    # ========== 综合 ==========
+    # 归一化：research_score 可能较大，取 sigmoid 风格压缩
+    # 但为了保持与原有算法兼容，保留原有分数，只加权组合
+    final_score = research_score * 0.7 + course_goal_score * 2.0 * 0.3
+
+    return round(final_score, 2)
 
 
 def recommend_teachers(user_profile: Dict, top_n: int = 5) -> List[Dict]:
