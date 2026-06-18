@@ -188,6 +188,11 @@ def get_recommend_offset(session_id: str) -> int:
     """获取当前用户的推荐偏移量"""
     conn = get_connection()
     try:
+        # 先检查列是否存在（兼容旧数据库）
+        cursor = conn.execute("PRAGMA table_info(profiles)")
+        columns = [row["name"] for row in cursor.fetchall()]
+        if "recommend_offset" not in columns:
+            return 0
         cursor = conn.execute(
             "SELECT recommend_offset FROM profiles WHERE session_id = ?",
             (session_id,)

@@ -462,87 +462,102 @@ def recommend_node(state: State):
     session_id = state.get("session_id", "default")
     profile = load_profile(session_id)
 
-    # 1. 检索，取更多导师用于换一批
-    all_teachers = recommend_teachers(profile, top_n=30)
+    try:
+        # 1. 检索，取更多导师用于换一批
+        all_teachers = recommend_teachers(profile, top_n=30)
 
-    if not all_teachers:
-        reply = "抱歉，暂时没有匹配到合适的导师。"
+        if not all_teachers:
+            reply = "抱歉，暂时没有匹配到合适的导师。您可以先告诉我您的兴趣方向，我来帮您匹配。"
+            messages = state.get("messages", []) + [
+                HumanMessage(content=state["user_input"]),
+                AIMessage(content=reply)
+            ]
+            return {"response": reply, "messages": messages}
+
+        # 2. 判断是否是"换一批"请求
+        user_input = state.get("user_input", "")
+        is_refresh = any(kw in user_input for kw in ["换一批", "换几个", "换一些", "换导师", "换推荐", "换人", "换"])
+
+        # 3. 从 session 中获取已推荐的导师索引
+        from app.profile_db import get_recommend_offset, set_recommend_offset
+        try:
+            offset = get_recommend_offset(session_id)
+        except Exception:
+            offset = 0
+        if is_refresh:
+            offset += 6  # 跳过上一批
+        else:
+            offset = 0  # 重新开始
+
+        # 确保不越界
+        if offset >= len(all_teachers):
+            offset = 0  # 循环
+
+        # 4. 取6个（从 offset 开始）
+        teachers = all_teachers[offset:offset + 6]
+        if len(teachers) < 6:
+            # 如果不够6个，从头补
+            remaining = 6 - len(teachers)
+            teachers += all_teachers[:remaining]
+            offset = 0  # 循环了
+
+        # 保存新的 offset
+        try:
+            set_recommend_offset(session_id, offset)
+        except Exception:
+            pass  # 兼容旧数据库
+
+        # 5. 构建显示列表
+        teacher_list = []
+        for idx, t in enumerate(teachers, 1):
+            teacher_list.append(
+                f"导师{idx}\n"
+                f"姓名：{t['name']}\n"
+                f"匹配度：{t['score']}\n"
+                f"研究方向：{', '.join(t.get('research', []))}\n"
+                f"课程：{', '.join(t.get('courses', []))}\n"
+                f"邮箱：{t.get('email', '')}\n"
+                f"主页：{t.get('homepage', '')}\n"
+            )
+        teacher_text = "\n".join(teacher_list)
+
+        profile_summary = build_profile_brief(profile)
+
+        # 6. 让 LLM 生成一段总体推荐说明
+        prompt = f"""
+        你是广州大学机械与电气工程学院的导师推荐专家。
+        根据用户画像，请为以下候选导师写一段约150字的推荐说明，说明这些导师为什么适合该学生。
+        不要单独列出导师，只进行总体分析。语言亲切、专业。
+
+        用户画像摘要：
+        {profile_summary}
+
+        候选导师（供参考）：
+        {teacher_text}
+
+        请生成推荐说明：
+        """
+        analysis = llm.invoke(prompt).content
+
+        # 7. 拼接最终回复，加上换一批提示
+        final_reply = f"为你找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}\n\n---\n不满意？可以告诉我「换一批」或继续点击推荐按钮，我会为你推荐其他导师。"
+        messages = state.get("messages", []) + [
+            HumanMessage(content=state["user_input"]),
+            AIMessage(content=final_reply)
+        ]
+        return {
+            "response": final_reply,
+            "messages": messages
+        }
+    except Exception as e:
+        # 兜底：如果推荐出错，返回友好提示
+        print("推荐导师出错:", e)
+        reply = "抱歉，推荐导师时遇到了一些问题。请稍后再试，或者先告诉我您的兴趣方向。"
         messages = state.get("messages", []) + [
             HumanMessage(content=state["user_input"]),
             AIMessage(content=reply)
         ]
         return {"response": reply, "messages": messages}
-
-    # 2. 判断是否是"换一批"请求
-    user_input = state.get("user_input", "")
-    is_refresh = any(kw in user_input for kw in ["换一批", "换几个", "换一些", "换导师", "换推荐", "换人", "换"])
-
-    # 3. 从 session 中获取已推荐的导师索引
-    # 使用 profile_db 的 history 来记录已推荐过的导师
-    from app.profile_db import get_recommend_offset, set_recommend_offset
-    offset = get_recommend_offset(session_id)
-    if is_refresh:
-        offset += 6  # 跳过上一批
-    else:
-        offset = 0  # 重新开始
-
-    # 确保不越界
-    if offset >= len(all_teachers):
-        offset = 0  # 循环
-
-    # 4. 取6个（从 offset 开始）
-    teachers = all_teachers[offset:offset + 6]
-    if len(teachers) < 6:
-        # 如果不够6个，从头补
-        remaining = 6 - len(teachers)
-        teachers += all_teachers[:remaining]
-        offset = 0  # 循环了
-
-    # 保存新的 offset
-    set_recommend_offset(session_id, offset)
-
-    # 3. 构建显示列表
-    teacher_list = []
-    for idx, t in enumerate(teachers, 1):
-        teacher_list.append(
-            f"导师{idx}\n"
-            f"姓名：{t['name']}\n"
-            f"匹配度：{t['score']}\n"
-            f"研究方向：{', '.join(t.get('research', []))}\n"
-            f"课程：{', '.join(t.get('courses', []))}\n"
-            f"邮箱：{t.get('email', '')}\n"
-            f"主页：{t.get('homepage', '')}\n"
-        )
-    teacher_text = "\n".join(teacher_list)
-
-    profile_summary = build_profile_brief(profile)
-
-    # 4. 让 LLM 生成一段总体推荐说明
-    prompt = f"""
-    你是广州大学机械与电气工程学院的导师推荐专家。
-    根据用户画像，请为以下候选导师写一段约150字的推荐说明，说明这些导师为什么适合该学生。
-    不要单独列出导师，只进行总体分析。语言亲切、专业。
-
-    用户画像摘要：
-    {profile_summary}
-
-    候选导师（供参考）：
-    {teacher_text}
-
-    请生成推荐说明：
-    """
-    analysis = llm.invoke(prompt).content
-
-    # 5. 拼接最终回复，加上换一批提示
-    final_reply = f"为你找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}\n\n---\n不满意？可以告诉我「换一批」或继续点击推荐按钮，我会为你推荐其他导师。"
-    messages = state.get("messages", []) + [
-        HumanMessage(content=state["user_input"]),
-        AIMessage(content=final_reply)
-    ]
-    return {
-        "response": final_reply,
-        "messages": messages
-    }
 
 
 def build_welcome_prompt(profile):
