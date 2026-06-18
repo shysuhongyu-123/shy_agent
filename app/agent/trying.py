@@ -425,6 +425,18 @@ def show_profile_summary_node(state: State):
     interests = get_sorted_profile(profile["interest"])
     goals = get_sorted_profile(profile["goal"])
 
+    # 如果画像为空，直接返回提示
+    if not interests and not goals:
+        reply = "您还没有记录任何画像信息哦！可以告诉我您的兴趣方向（比如机器人、人工智能、嵌入式等）和未来目标（比如考研、就业等），我来帮您建立画像。"
+        messages = state.get("messages", []) + [
+            HumanMessage(content=state["user_input"]),
+            AIMessage(content=reply)
+        ]
+        return {
+            "response": reply,
+            "messages": messages
+        }
+
     interest_text = "\n".join([
         f"{NAME_MAP.get(name, name)}（{data['composite_score']}）"
         for name, data in interests[:3]
