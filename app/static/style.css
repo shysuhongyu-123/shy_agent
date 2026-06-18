@@ -19,6 +19,8 @@
     --mario-yellow: #FBD000;
     --mario-green: #049C4A;
     --mario-green-dark: #037D3B;
+    --mario-brown: #8B4513;
+    --mario-skin: #FDBF60;
 
     --primary: var(--mario-red);
     --primary-dark: var(--mario-red-dark);
@@ -71,6 +73,7 @@ body {
     overflow: hidden;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     animation: fadeIn 0.5s ease;
+    position: relative;
 }
 
 @keyframes fadeIn {
@@ -79,7 +82,7 @@ body {
 }
 
 /* ============================================================
-   左侧边栏
+   左侧边栏 — 马里奥主题
    ============================================================ */
 .sidebar {
     width: 280px;
@@ -92,26 +95,109 @@ body {
     overflow: hidden;
 }
 
+/* 背景装饰：马里奥问号方块 */
 .sidebar::before {
-    content: '';
+    content: '?';
     position: absolute;
-    top: -30%;
-    right: -30%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(4, 156, 216, 0.08) 0%, transparent 70%);
+    top: 8%;
+    right: 10%;
+    font-size: 80px;
+    font-weight: 900;
+    color: rgba(251, 208, 0, 0.06);
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    transform: rotate(-5deg);
     pointer-events: none;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
 }
 
+/* 背景装饰：蘑菇 */
 .sidebar::after {
     content: '';
     position: absolute;
-    bottom: -20%;
-    left: -20%;
-    width: 150px;
-    height: 150px;
-    background: radial-gradient(circle, rgba(229, 37, 33, 0.06) 0%, transparent 70%);
+    bottom: 15%;
+    left: 5%;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle at 50% 40%, rgba(229, 37, 33, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
     pointer-events: none;
+}
+
+/* 蘑菇装饰细节 */
+.sidebar-deco-mushroom {
+    position: absolute;
+    bottom: 12%;
+    left: 8%;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+    opacity: 0.08;
+}
+
+.sidebar-deco-mushroom::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 24px;
+    background: var(--mario-red);
+    border-radius: 20px 20px 0 0;
+}
+
+.sidebar-deco-mushroom::after {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 16px;
+    background: var(--mario-skin);
+    margin: -2px auto 0;
+    border-radius: 50%;
+}
+
+/* 管道装饰 */
+.sidebar-deco-pipe {
+    position: absolute;
+    bottom: 0;
+    right: 15%;
+    width: 30px;
+    height: 50px;
+    pointer-events: none;
+    opacity: 0.06;
+}
+
+.sidebar-deco-pipe::before {
+    content: '';
+    display: block;
+    width: 34px;
+    height: 10px;
+    background: var(--mario-green);
+    border-radius: 3px 3px 0 0;
+    margin: 0 auto;
+}
+
+.sidebar-deco-pipe::after {
+    content: '';
+    display: block;
+    width: 26px;
+    height: 40px;
+    background: var(--mario-green-dark);
+    margin: 0 auto;
+    border-radius: 0 0 3px 3px;
+}
+
+/* 星星装饰 */
+.sidebar-deco-star {
+    position: absolute;
+    top: 20%;
+    left: 12%;
+    font-size: 24px;
+    color: rgba(251, 208, 0, 0.06);
+    pointer-events: none;
+    animation: floatStar 3s ease-in-out infinite;
+}
+
+@keyframes floatStar {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(10deg); }
 }
 
 .sidebar-header {
@@ -121,9 +207,10 @@ body {
     z-index: 1;
 }
 
+/* 马里奥帽子 logo */
 .logo {
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
     border-radius: 50%;
     display: flex;
@@ -134,24 +221,36 @@ body {
     position: relative;
 }
 
+/* 帽子上的 M 标志 */
+.logo::before {
+    content: 'M';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    font-weight: 900;
+    color: white;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+/* 帽子帽檐 */
 .logo::after {
     content: '';
     position: absolute;
-    inset: -3px;
-    border-radius: 50%;
-    border: 2px solid rgba(251, 208, 0, 0.3);
-    animation: ringPulse 2s infinite;
-}
-
-@keyframes ringPulse {
-    0%, 100% { transform: scale(1); opacity: 0.5; }
-    50% { transform: scale(1.08); opacity: 0.2; }
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 6px;
+    background: var(--mario-red-dark);
+    border-radius: 0 0 4px 4px;
 }
 
 .logo i {
-    font-size: 28px;
-    color: var(--mario-yellow);
-    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
+    display: none;
 }
 
 .sidebar-header h2 {
@@ -261,9 +360,10 @@ body {
     background: var(--chat-bg);
     min-width: 0;
     min-height: 0;
+    position: relative;
 }
 
-/* 聊天头部 */
+/* 聊天头部 — 马里奥主题 */
 .chat-header {
     display: flex;
     justify-content: space-between;
@@ -272,6 +372,28 @@ body {
     background: white;
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 头部底部马里奥砖块装饰线 */
+.chat-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(
+        90deg,
+        var(--mario-red) 0px,
+        var(--mario-red) 20px,
+        var(--mario-yellow) 20px,
+        var(--mario-yellow) 40px,
+        var(--mario-brown) 40px,
+        var(--mario-brown) 60px
+    );
+    opacity: 0.3;
 }
 
 .header-left {
@@ -280,20 +402,46 @@ body {
     gap: 10px;
 }
 
+/* 马里奥头像 */
 .mario-icon {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 8px rgba(229, 37, 33, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 帽子上的 M */
+.mario-icon::before {
+    content: 'M';
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+/* 帽檐 */
+.mario-icon::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 4px;
+    background: var(--mario-red-dark);
+    border-radius: 0 0 3px 3px;
 }
 
 .mario-icon i {
-    font-size: 18px;
-    color: var(--mario-yellow);
+    display: none;
 }
 
 .header-left span {
@@ -460,7 +608,7 @@ body {
 }
 
 /* ============================================================
-   推荐导师按钮
+   推荐导师按钮 — 马里奥问号方块风格
    ============================================================ */
 .recommend-bar {
     display: flex;
@@ -473,28 +621,40 @@ body {
     align-items: center;
     gap: 8px;
     padding: 10px 28px;
-    background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
-    color: white;
-    border: none;
-    border-radius: 25px;
+    background: linear-gradient(135deg, var(--mario-yellow), #e6b800);
+    color: var(--mario-brown);
+    border: 3px solid var(--mario-brown);
+    border-radius: 8px;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 800;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 12px rgba(229, 37, 33, 0.25);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 0 var(--mario-brown), 0 3px 12px rgba(0,0,0,0.15);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    position: relative;
+}
+
+.recommend-btn::before {
+    content: '?';
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--mario-brown);
+}
+
+.recommend-btn i {
+    display: none;
 }
 
 .recommend-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(229, 37, 33, 0.35);
+    box-shadow: 0 6px 0 var(--mario-brown), 0 6px 20px rgba(0,0,0,0.2);
 }
 
 .recommend-btn:active {
-    transform: translateY(0);
-}
-
-.recommend-btn i {
-    font-size: 18px;
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--mario-brown), 0 3px 10px rgba(0,0,0,0.15);
 }
 
 /* ============================================================
@@ -723,24 +883,26 @@ body {
     color: var(--text-light);
 }
 
+/* 发送按钮 — 马里奥红色帽子风格 */
 .input-wrapper button {
     width: 42px;
     height: 42px;
     border: none;
     background: linear-gradient(135deg, var(--mario-red), var(--mario-red-dark));
     color: white;
-    border-radius: var(--radius-sm);
+    border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(229, 37, 33, 0.3);
 }
 
 .input-wrapper button:hover:not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(229, 37, 33, 0.3);
+    transform: scale(1.1) rotate(-10deg);
+    box-shadow: 0 4px 12px rgba(229, 37, 33, 0.4);
 }
 
 .input-wrapper button:active:not(:disabled) {
@@ -756,7 +918,7 @@ body {
     font-size: 16px;
 }
 
-/* 快捷输入标签 */
+/* 快捷输入标签 — 马里奥金币风格 */
 .input-tips {
     display: flex;
     gap: 8px;
@@ -766,22 +928,26 @@ body {
 
 .tip {
     padding: 5px 14px;
-    background: white;
-    border: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--mario-yellow), #e6b800);
+    border: 2px solid var(--mario-brown);
     border-radius: 20px;
     font-size: 12px;
-    color: var(--text-secondary);
+    font-weight: 700;
+    color: var(--mario-brown);
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .tip:hover {
     background: var(--mario-blue);
     color: white;
     border-color: var(--mario-blue);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(4, 156, 216, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(4, 156, 216, 0.3);
 }
 
 /* ============================================================
@@ -809,6 +975,14 @@ body {
         flex-shrink: 0;
     }
 
+    .sidebar::before,
+    .sidebar::after,
+    .sidebar-deco-mushroom,
+    .sidebar-deco-pipe,
+    .sidebar-deco-star {
+        display: none;
+    }
+
     .sidebar-header {
         display: flex;
         align-items: center;
@@ -821,15 +995,15 @@ body {
         width: 36px;
         height: 36px;
         margin: 0;
-        animation: none;
+    }
+
+    .logo::before {
+        font-size: 16px;
     }
 
     .logo::after {
-        display: none;
-    }
-
-    .logo i {
-        font-size: 16px;
+        width: 28px;
+        height: 3px;
     }
 
     .sidebar-header h2 {
