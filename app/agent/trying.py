@@ -463,10 +463,10 @@ def recommend_node(state: State):
     profile = load_profile(session_id)
 
     try:
-        # 1. 检索，取更多导师用于换一批
-        all_teachers = recommend_teachers(profile, top_n=30)
+        # 1. 用推荐算法对所有导师打分排序，取前30个
+        all_scored = recommend_teachers(profile, top_n=30)
 
-        if not all_teachers:
+        if not all_scored:
             reply = "抱歉，暂时没有匹配到合适的导师。您可以先告诉我您的兴趣方向，我来帮您匹配。"
             messages = state.get("messages", []) + [
                 HumanMessage(content=state["user_input"]),
@@ -484,22 +484,25 @@ def recommend_node(state: State):
             offset = get_recommend_offset(session_id)
         except Exception:
             offset = 0
+
         if is_refresh:
             offset += 6  # 跳过上一批
         else:
             offset = 0  # 重新开始
 
-        # 确保不越界
-        if offset >= len(all_teachers):
-            offset = 0  # 循环
+        # 确保不越界（循环）
+        if offset >= len(all_scored):
+            offset = 0
 
         # 4. 取6个（从 offset 开始）
-        teachers = all_teachers[offset:offset + 6]
+        teachers = all_scored[offset:offset + 6]
         if len(teachers) < 6:
-            # 如果不够6个，从头补
+            # 如果不够6个，从头补（避免重复）
             remaining = 6 - len(teachers)
-            teachers += all_teachers[:remaining]
-            offset = 0  # 循环了
+            for t in all_scored[:remaining]:
+                if t not in teachers:
+                    teachers.append(t)
+            offset = 0
 
         # 保存新的 offset
         try:
@@ -552,6 +555,8 @@ def recommend_node(state: State):
     except Exception as e:
         # 兜底：如果推荐出错，返回友好提示
         print("推荐导师出错:", e)
+        import traceback
+        traceback.print_exc()
         reply = "抱歉，推荐导师时遇到了一些问题。请稍后再试，或者先告诉我您的兴趣方向。"
         messages = state.get("messages", []) + [
             HumanMessage(content=state["user_input"]),
