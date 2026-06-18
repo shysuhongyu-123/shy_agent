@@ -24,7 +24,7 @@ if os.path.exists(env_path):
 from flask import Flask, request, jsonify, render_template, redirect
 from app.agent.trying import run_agent, get_welcome_message
 from app.user_db import register_user, login_user, validate_token, logout_user
-from app.logger import logger, send_error_alert
+from app.logger import logger
 
 # 指定模板和静态文件夹路径
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -60,10 +60,9 @@ def get_session_id():
 
 @app.errorhandler(500)
 def handle_500(error):
-    """捕获 500 错误，记录日志并发送告警邮件"""
+    """捕获 500 错误，记录日志"""
     request_info = f"URL: {request.url}\nMethod: {request.method}\nIP: {request.remote_addr}"
     logger.error("500 错误: %s\n%s", str(error), request_info)
-    send_error_alert(str(error), request_info)
     return jsonify({"reply": "抱歉，服务器内部错误，请稍后再试。"}), 500
 
 
@@ -72,7 +71,6 @@ def handle_uncaught(error):
     """捕获所有未处理的异常"""
     request_info = f"URL: {request.url}\nMethod: {request.method}\nIP: {request.remote_addr}"
     logger.error("未捕获异常: %s\n%s", str(error), request_info)
-    send_error_alert(str(error), request_info)
     return jsonify({"reply": "抱歉，系统遇到了一些问题，请稍后再试。"}), 500
 
 
@@ -192,7 +190,6 @@ def chat():
         return jsonify({"reply": response})
     except Exception as e:
         logger.error("聊天处理异常: session=%s, error=%s", session_id, str(e))
-        send_error_alert(str(e), f"session_id={session_id}, user_input={user_input[:100]}")
         return jsonify({"reply": "抱歉，我遇到了一些问题，请稍后再试。"})
 
 
