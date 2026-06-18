@@ -375,8 +375,21 @@ def get_latest_update(history):
     if not history:
         return None
     for record in reversed(history):
-        if record["update"]["interests"] or record["update"]["goals"]:
-            return record
+        update = record.get("update", {})
+        if isinstance(update, dict):
+            interests = update.get("interests", [])
+            goals = update.get("goals", [])
+            if interests or goals:
+                return record
+        elif isinstance(update, str) and update:
+            # 如果是 JSON 字符串，尝试解析
+            try:
+                import json
+                parsed = json.loads(update)
+                if parsed.get("interests") or parsed.get("goals"):
+                    return record
+            except Exception:
+                pass
     return None
 
 
