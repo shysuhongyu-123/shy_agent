@@ -2,21 +2,26 @@
 SQLite 数据库模块 — 替代 JSON 文件存储用户画像
 
 支持多用户隔离存储，每个用户（由 session_id 标识）拥有独立的画像数据。
+使用 threading.Lock 保证写入操作的线程安全。
 """
 
 import sqlite3
 import os
 import json
+import threading
 from datetime import datetime
 from typing import Optional, Dict, List
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "profiles.db")
 
+# 写锁：所有写入操作必须获取此锁
+_write_lock = threading.Lock()
+
 
 def get_connection():
     """获取数据库连接"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=10)  # 超时10秒
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")  # 提高并发性能
     return conn
@@ -87,24 +92,26 @@ def save_profile(session_id: str, profile: dict):
     """
     保存或更新指定用户的画像（interest 和 goal 部分）。
     history 通过 add_history 单独添加。
+    使用写锁保证线程安全。
     """
-    conn = get_connection()
-    try:
-        interest_json = json.dumps(profile.get("interest", {}), ensure_ascii=False)
-        goal_json = json.dumps(profile.get("goal", {}), ensure_ascii=False)
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with _write_lock:
+        conn = get_connection()
+        try:
+            interest_json = json.dumps(profile.get("interest", {}), ensure_ascii=False)
+            goal_json = json.dumps(profile.get("goal", {}), ensure_ascii=False)
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        conn.execute("""
-            INSERT INTO profiles (session_id, interest, goal, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?)
-            ON CONFLICT(session_id) DO UPDATE SET
-                interest = excluded.interest,
-                goal = excluded.goal,
-                updated_at = excluded.updated_at
-        """, (session_id, interest_json, goal_json, now, now))
-        conn.commit()
-    finally:
-        conn.close()
+            conn.execute("""
+                INSERT INTO profiles (session_id, interest, goal, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(session_id) DO UPDATE SET
+                    interest = excluded.interest,
+                    goal = excluded.goal,
+                    updated_at = excluded.updated_at
+            """, (session_id, interest_json, goal_json, now, now))
+            conn.commit()
+        finally:
+            conn.close()
 
 
 def load_history(session_id: str, limit: int = 100) -> list:
@@ -135,20 +142,21 @@ def load_history(session_id: str, limit: int = 100) -> list:
 
 def add_history(session_id: str, message: str, intent: str = "",
                 response: str = "", update_data: dict = None):
-    """添加一条历史记录"""
+    """添加一条历史记录，使用写锁保证线程安全"""
     if update_data is None:
         update_data = {}
-    conn = get_connection()
-    try:
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        update_json = json.dumps(update_data, ensure_ascii=False)
-        conn.execute("""
-            INSERT INTO profile_history (session_id, time, message, intent, response, update_data)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (session_id, now, message, intent, response, update_json))
-        conn.commit()
-    finally:
-        conn.close()
+    with _write_lock:
+        conn = get_connection()
+        try:
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            update_json = json.dumps(update_data, ensure_ascii=False)
+            conn.execute("""
+                INSERT INTO profile_history (session_id, time, message, intent, response, update_data)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (session_id, now, message, intent, response, update_json))
+            conn.commit()
+        finally:
+            conn.close()
 
 
 def check_recent_history(session_id: str, message: str) -> bool:
@@ -170,14 +178,15 @@ def check_recent_history(session_id: str, message: str) -> bool:
 
 
 def delete_profile(session_id: str):
-    """删除指定用户的所有数据"""
-    conn = get_connection()
-    try:
-        conn.execute("DELETE FROM profile_history WHERE session_id = ?", (session_id,))
-        conn.execute("DELETE FROM profiles WHERE session_id = ?", (session_id,))
-        conn.commit()
-    finally:
-        conn.close()
+    """删除指定用户的所有数据，使用写锁保证线程安全"""
+    with _write_lock:
+        conn = get_connection()
+        try:
+            conn.execute("DELETE FROM profile_history WHERE session_id = ?", (session_id,))
+            conn.execute("DELETE FROM profiles WHERE session_id = ?", (session_id,))
+            conn.commit()
+        finally:
+            conn.close()
 
 
 # ============================================================
@@ -206,15 +215,16 @@ def get_recommend_offset(session_id: str) -> int:
 
 
 def set_recommend_offset(session_id: str, offset: int):
-    """设置当前用户的推荐偏移量"""
-    conn = get_connection()
-    try:
-        conn.execute("""
-            UPDATE profiles SET recommend_offset = ? WHERE session_id = ?
-        """, (offset, session_id))
-        conn.commit()
-    finally:
-        conn.close()
+    """设置当前用户的推荐偏移量，使用写锁保证线程安全"""
+    with _write_lock:
+        conn = get_connection()
+        try:
+            conn.execute("""
+                UPDATE profiles SET recommend_offset = ? WHERE session_id = ?
+            """, (offset, session_id))
+            conn.commit()
+        finally:
+            conn.close()
 
 
 # 应用启动时初始化数据库
