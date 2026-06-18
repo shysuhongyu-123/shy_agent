@@ -463,10 +463,19 @@ def recommend_node(state: State):
     profile = load_profile(session_id)
 
     try:
+        # 打印画像信息用于调试
+        print(f"[recommend_node] session_id={session_id}")
+        print(f"[recommend_node] interest keys: {list(profile.get('interest', {}).keys())}")
+        for k, v in profile.get("interest", {}).items():
+            print(f"[recommend_node]   {k}: composite_score={v.get('composite_score', 'N/A')}")
+        print(f"[recommend_node] goal keys: {list(profile.get('goal', {}).keys())}")
+
         # 1. 用推荐算法对所有导师打分排序，取前30个
         all_scored = recommend_teachers(profile, top_n=30)
+        print(f"[recommend_node] all_scored count: {len(all_scored)}")
 
         if not all_scored:
+            print("[recommend_node] 没有匹配到任何导师！")
             reply = "抱歉，暂时没有匹配到合适的导师。您可以先告诉我您的兴趣方向，我来帮您匹配。"
             messages = state.get("messages", []) + [
                 HumanMessage(content=state["user_input"]),
