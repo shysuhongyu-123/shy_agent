@@ -340,7 +340,8 @@ def confirm_profile_node(state: State):
 
     return {
         "response": confirm_text,
-        "messages": messages
+        "messages": messages,
+        "intent": "update_profile"  # 保留 intent 供 run_agent 判断
     }
 
 
