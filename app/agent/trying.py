@@ -17,6 +17,7 @@ from app.profile_db import (
     check_recent_history as db_check_recent_history
 )
 from app.logger import logger
+from app.cache import invalidate_teacher_scores
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -301,6 +302,9 @@ def update_profile(profile, message):
 def profile_node(state: State):
     profile, profile_info = update_profile(state["user_profile"], state["user_input"])
     logger.info("画像更新后: %s", str({k: list(v.keys()) for k, v in profile.items() if isinstance(v, dict)}))
+    # 画像更新了，清除该用户的导师评分缓存
+    session_id = state.get("session_id", "default")
+    invalidate_teacher_scores(session_id)
     # 将提取的信息暂存到 analysis_result，供 confirm 使用
     return {
         "user_profile": profile,
@@ -500,8 +504,8 @@ def recommend_node(state: State):
                      list(profile.get('interest', {}).keys()),
                      list(profile.get('goal', {}).keys()))
 
-        # 1. 用推荐算法对所有导师打分排序，取前30个
-        all_scored = recommend_teachers(profile, top_n=30)
+        # 1. 用推荐算法对所有导师打分排序，取前30个（带缓存）
+        all_scored = recommend_teachers(profile, top_n=30, session_id=session_id)
         logger.info("推荐导师: 候选数量=%d", len(all_scored))
 
         if not all_scored:

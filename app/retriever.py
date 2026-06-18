@@ -1,9 +1,10 @@
 import json
 import os
 import re
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from app.logger import logger
+from app.cache import cache_teacher_scores, get_cached_teacher_scores
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEACHERS_JSON = os.path.join(BASE_DIR, "gzhu_teachers.json")
@@ -354,7 +355,17 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
     return round(final_score, 2)
 
 
-def recommend_teachers(user_profile: Dict, top_n: int = 5) -> List[Dict]:
+def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "default") -> List[Dict]:
+    """
+    推荐导师，带缓存。
+    缓存键基于 session_id，画像更新时自动清除缓存。
+    """
+    # 尝试从缓存获取
+    cached = get_cached_teacher_scores(session_id)
+    if cached is not None:
+        logger.info("导师评分缓存命中: session=%s", session_id)
+        return cached[:top_n]
+
     teachers = load_teachers()
     if not teachers:
         return []
@@ -367,6 +378,10 @@ def recommend_teachers(user_profile: Dict, top_n: int = 5) -> List[Dict]:
             scored_teachers.append(teacher)
 
     scored_teachers.sort(key=lambda x: x["score"], reverse=True)
+
+    # 缓存评分结果（前30个）
+    cache_teacher_scores(session_id, scored_teachers[:30])
+
     return scored_teachers[:top_n]
 
 

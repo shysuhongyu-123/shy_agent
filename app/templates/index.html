@@ -278,6 +278,9 @@ async function sendMessage() {
     input.value = "";
     autoResize(input);
 
+    // 显示加载动画
+    let loadingId = showLoading();
+
     try {
         let response = await fetch("/chat", {
             method: "POST",
@@ -288,8 +291,14 @@ async function sendMessage() {
             })
         });
         let data = await response.json();
-        addBotMessage(data.reply);
+
+        // 移除加载动画
+        hideLoading(loadingId);
+
+        // 使用打字机效果显示回复
+        addBotMessageWithTyping(data.reply);
     } catch (e) {
+        hideLoading(loadingId);
         addBotMessage("抱歉，我遇到了一些问题，请稍后再试。");
     } finally {
         btn.disabled = false;
@@ -322,8 +331,9 @@ function addBotMessage(text) {
     let box = document.getElementById("chat-box");
     let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
     let formattedText = escapeHtml(text).replace(/\n/g, '<br>');
+    let msgId = "msg-" + Date.now();
     box.innerHTML += `
-        <div class="message bot">
+        <div class="message bot" id="${msgId}">
             <div class="message-meta">
                 <i class="fas fa-robot"></i>
                 <span class="time">${time}</span>
@@ -333,6 +343,72 @@ function addBotMessage(text) {
             </div>
         </div>`;
     box.scrollTop = box.scrollHeight;
+}
+
+function addBotMessageWithTyping(text) {
+    let box = document.getElementById("chat-box");
+    let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
+    let msgId = "msg-" + Date.now();
+    box.innerHTML += `
+        <div class="message bot" id="${msgId}">
+            <div class="message-meta">
+                <i class="fas fa-robot"></i>
+                <span class="time">${time}</span>
+            </div>
+            <div class="message-content">
+                <div class="bubble typing-bubble" id="${msgId}-text"></div>
+            </div>
+        </div>`;
+    box.scrollTop = box.scrollHeight;
+
+    // 打字机效果：逐字显示
+    let displayText = escapeHtml(text).replace(/\n/g, '<br>');
+    let container = document.getElementById(msgId + "-text");
+    let index = 0;
+    let chars = displayText.split('');
+
+    function typeChar() {
+        if (index < chars.length) {
+            container.innerHTML += chars[index];
+            index++;
+            box.scrollTop = box.scrollHeight;
+            // 根据内容长度动态调整速度
+            let delay = 15;
+            if (chars[index] === '<') delay = 1;  // HTML标签快速跳过
+            setTimeout(typeChar, delay);
+        } else {
+            container.classList.remove("typing-bubble");
+        }
+    }
+    typeChar();
+}
+
+function showLoading() {
+    let box = document.getElementById("chat-box");
+    let msgId = "loading-" + Date.now();
+    box.innerHTML += `
+        <div class="message bot" id="${msgId}">
+            <div class="message-meta">
+                <i class="fas fa-robot"></i>
+                <span class="time">${new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"})}</span>
+            </div>
+            <div class="message-content">
+                <div class="bubble loading-bubble">
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    box.scrollTop = box.scrollHeight;
+    return msgId;
+}
+
+function hideLoading(loadingId) {
+    let el = document.getElementById(loadingId);
+    if (el) el.remove();
 }
 
 function quickFill(text) {

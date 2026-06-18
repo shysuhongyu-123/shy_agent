@@ -21,10 +21,15 @@ if os.path.exists(env_path):
                 if key not in os.environ:
                     os.environ[key] = value
 
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify, render_template, redirect, Response
 from app.agent.trying import run_agent, get_welcome_message
 from app.user_db import register_user, login_user, validate_token, logout_user
 from app.logger import logger
+from app.cache import (
+    cache_llm_response, get_cached_llm_response,
+    cache_teacher_scores, get_cached_teacher_scores,
+    invalidate_teacher_scores
+)
 
 # 指定模板和静态文件夹路径
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -166,6 +171,17 @@ def chat():
     session_id = get_session_id()
     logger.info("聊天请求: session=%s, message=%s", session_id, user_input[:50])
 
+    # 先检查缓存
+    cached = get_cached_llm_response(session_id, user_input)
+    if cached:
+        logger.info("聊天缓存命中: session=%s", session_id)
+        # 更新会话历史
+        history = sessions.get(session_id, [])
+        history.append({"role": "user", "content": user_input})
+        history.append({"role": "assistant", "content": cached})
+        sessions[session_id] = history
+        return jsonify({"reply": cached})
+
     # 获取该会话的历史消息（转换为 LangChain 消息格式）
     history = sessions.get(session_id, [])
     from langchain_core.messages import HumanMessage, AIMessage
@@ -180,6 +196,9 @@ def chat():
     try:
         # 调用 agent（传入 session_id 以支持多用户隔离）
         response, updated_messages = run_agent(user_input, messages, session_id=session_id)
+
+        # 缓存 LLM 回复
+        cache_llm_response(session_id, user_input, response)
 
         # 更新会话历史
         history.append({"role": "user", "content": user_input})
