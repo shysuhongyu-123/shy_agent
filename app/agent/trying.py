@@ -164,16 +164,29 @@ def save_profile(profile: dict, session_id: str = "default"):
     db_save_profile(session_id, profile)
 
 
-def extract_profile(message):
+def extract_profile(message, context_messages=None):
+    """提取用户画像信息，支持传入上下文消息"""
     # 构建兴趣标签列表供 LLM 参考（仅作为示例，不限制输出）
     interest_options = ", ".join([f"{k}({v})" for k, v in INTEREST_MAP.items()])
     goal_options = ", ".join([f"{k}({v})" for k, v in GOAL_MAP.items()])
+
+    # 构建上下文信息（最近几条对话）
+    context_text = ""
+    if context_messages:
+        recent = context_messages[-6:]  # 最近3轮对话
+        context_lines = []
+        for msg in recent:
+            if hasattr(msg, 'content'):
+                context_lines.append(msg.content[:100])
+        if context_lines:
+            context_text = "最近对话上下文（供参考）：\n" + "\n".join(context_lines) + "\n\n"
 
     prompt = f"""
 提取用户画像信息：
 用户输入:
 {message}
 
+{context_text}
 预定义的兴趣标签（仅作参考，不强制使用）：
 {interest_options}
 
@@ -184,13 +197,14 @@ def extract_profile(message):
 1. 支持一次消息提到多个兴趣/目标
 2. **重要：如果用户说的兴趣不在预定义列表中，请使用用户的原话作为 name（中文），并设置 weight。** 例如用户说"我喜欢数字媒体"，则输出 {{"name":"数字媒体","weight":1.0}}
 3. **重要：如果用户说"像XXX啊，XXX这些"、"比如XXX、XXX"、"例如XXX"等列举具体方向，请把每个具体方向都作为独立的兴趣提取，不要合并到预定义标签中。** 例如用户说"像强化学习啊，深度学习这些"，应输出 {{"name":"强化学习","weight":1.0}} 和 {{"name":"深度学习","weight":1.0}}，而不是只输出 {{"name":"ai","weight":1.0}}
-4. 支持正负权重，**特别注意否定表达**：
+4. **重要：如果用户说"我喜欢他/她/ta"、"我喜欢这位老师"等指代性表达，请结合上下文判断指代的对象（如导师姓名、研究方向等），提取为兴趣。** 例如用户刚问了"你知道刘贵云老师吗"，然后说"我喜欢他"，应输出 {{"name":"刘贵云","weight":1.0}}
+5. 支持正负权重，**特别注意否定表达**：
    - "喜欢/有兴趣/感兴趣/想学/想了解" => 正权重 0.2~1.0
    - **"不喜欢/没兴趣/不考虑/不想学/不感兴趣/不喜欢了/不想"** => 负权重 -0.5~-1.0
    - **"我又不喜欢XXX了"、"我不喜欢XXX了"、"对XXX没兴趣了"** => 负权重 -1.0
    - "不想就业/放弃就业/不考虑就业" => employment:-1
-5. **重要：如果用户说"不喜欢XXX"，必须提取为负权重，不能提取为正权重！**
-6. 输出格式必须严格如下 JSON：
+6. **重要：如果用户说"不喜欢XXX"，必须提取为负权重，不能提取为正权重！**
+7. 输出格式必须严格如下 JSON：
 {{
   "interests": [
     {{"name":"robotics","weight":1.0}},
@@ -201,8 +215,8 @@ def extract_profile(message):
     {{"name":"phd","weight":1.0}}
   ]
 }}
-7. 如果消息没有提到兴趣或目标，则返回空数组
-8. 只返回 JSON，不要解释、不要额外文本
+8. 如果消息没有提到兴趣或目标，则返回空数组
+9. 只返回 JSON，不要解释、不要额外文本
 """
     response = llm.invoke(prompt)
     logger.info("画像提取结果: %s", response.content[:200])
@@ -223,8 +237,8 @@ def compute_composite(score, positive_count, negative_count, last_update):
     return round(composite, 2)
 
 
-def update_profile(profile, message):
-    profile_info = extract_profile(message)
+def update_profile(profile, message, context_messages=None):
+    profile_info = extract_profile(message, context_messages)
     now = datetime.now().strftime("%Y-%m-%d")
 
     # 删除阈值：当 composite_score 低于此值时移除该标签
@@ -299,7 +313,7 @@ def update_profile(profile, message):
 
 
 def profile_node(state: State):
-    profile, profile_info = update_profile(state["user_profile"], state["user_input"])
+    profile, profile_info = update_profile(state["user_profile"], state["user_input"], state.get("messages"))
     logger.info("画像更新后: %s", str({k: list(v.keys()) for k, v in profile.items() if isinstance(v, dict)}))
     # 画像更新了，清除该用户的导师评分缓存
     session_id = state.get("session_id", "default")
@@ -689,7 +703,7 @@ def explore_node(state: State):
 
     prompt = f"""你是广州大学机械与电气工程学院的学长/学姐，热情、亲切。
 用户表示迷茫，不知道自己喜欢什么方向，请你用一段话（约200-300字）：
-1. 先安慰用户，告诉ta大一迷茫很正常
+1. 先安慰用户，告诉ta迷茫很正常，不用着急
 2. 简要介绍学院的主要研究方向，让用户有个大致了解：
    {', '.join(interest_names)}
 3. 介绍可能的未来目标方向：
