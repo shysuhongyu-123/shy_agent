@@ -348,14 +348,18 @@ function renderMarkdown(text) {
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
     // 4. 行内代码：`code`
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // 5. 无序列表：- item
+    // 5. 先处理列表（在换行转<br>之前处理，避免<br>干扰）
+    // 5a. 无序列表：- item → <li>item</li>
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-    // 6. 有序列表：1. item
+    // 5b. 有序列表：1. item → <li>item</li>
     html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-    // 7. 换行转 <br>
+    // 5c. 将连续的 <li> 包裹在 <ul> 中
+    html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
+    // 6. 换行转 <br>（在列表处理之后）
     html = html.replace(/\n/g, '<br>');
-    // 8. 修复列表后的多余 <br>
+    // 7. 修复列表内多余的 <br>
+    html = html.replace(/<\/li><br>/g, '</li>');
+    html = html.replace(/<br><li>/g, '<li>');
     html = html.replace(/<\/ul><br>/g, '</ul>');
     html = html.replace(/<br><ul>/g, '<ul>');
     return html;
