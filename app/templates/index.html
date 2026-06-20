@@ -448,19 +448,42 @@ function addBotMessageWithTyping(text) {
         </div>`;
     box.scrollTop = box.scrollHeight;
 
-    // 打字机效果：逐字显示（先渲染 Markdown，再逐字显示 HTML）
+    // 先渲染 Markdown
     let displayHtml = renderMarkdown(text);
     let container = document.getElementById(msgId + "-text");
+
+    // 将 HTML 按标签块拆分，避免逐字添加破坏 HTML 标签
+    // 例如 "<br>" 作为一个整体添加，而不是拆成 '<' 'b' 'r' '>'
+    let tokens = [];
+    let i = 0;
+    while (i < displayHtml.length) {
+        if (displayHtml[i] === '<') {
+            // 找到完整的 HTML 标签
+            let end = displayHtml.indexOf('>', i);
+            if (end !== -1) {
+                tokens.push(displayHtml.substring(i, end + 1));
+                i = end + 1;
+            } else {
+                tokens.push(displayHtml[i]);
+                i++;
+            }
+        } else {
+            // 普通文本，按字符拆分
+            tokens.push(displayHtml[i]);
+            i++;
+        }
+    }
+
     let index = 0;
-    let chars = displayHtml.split('');
 
     function typeChar() {
-        if (index < chars.length) {
-            container.innerHTML += chars[index];
+        if (index < tokens.length) {
+            container.innerHTML += tokens[index];
             index++;
             box.scrollTop = box.scrollHeight;
             let delay = 15;
-            if (chars[index] === '<') delay = 1;
+            // HTML 标签快速跳过
+            if (tokens[index] && tokens[index].startsWith('<')) delay = 1;
             setTimeout(typeChar, delay);
         } else {
             container.classList.remove("typing-bubble");
