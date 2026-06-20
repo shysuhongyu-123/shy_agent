@@ -217,4 +217,7 @@ if __name__ == "__main__":
     logger.info("  广州大学机械与电气工程学院 — 智能导师推荐系统")
     logger.info("  Web 界面: http://127.0.0.1:5000")
     logger.info("=" * 60)
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    # PythonAnywhere 使用 WSGI，不会执行此块
+    # 本地开发时使用 debug=True 方便调试
+    debug_mode = os.environ.get("FLASK_ENV") == "development"
+    app.run(debug=debug_mode, host="0.0.0.0", port=5000)

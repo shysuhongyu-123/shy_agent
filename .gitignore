@@ -1,16 +1,18 @@
-# 环境变量文件（包含 API Key，切勿提交到版本控制）
-.env
-
 # Python 缓存
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# 虚拟环境
-venv/
-env/
-.venv/
+# 环境变量（包含 API Key！）
+.env
+
+# SQLite 数据库（自动生成）
+*.db
+
+# 日志文件
+logs/
+*.log
 
 # IDE 配置
 .idea/
@@ -18,13 +20,11 @@ env/
 *.swp
 *.swo
 
-# SQLite 数据库文件
-*.db
-*.sqlite
-
-# 旧的 JSON 画像文件（已迁移到 SQLite）
-app/agent/profile.json
-
 # 操作系统文件
-Thumbs.db
 .DS_Store
+Thumbs.db
+
+# 虚拟环境
+venv/
+.venv/
+env/

@@ -7,8 +7,6 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 import json
 
-from pyexpat.errors import messages
-
 from app.retriever import recommend_teachers
 from app.profile_db import (
     load_profile as db_load_profile,
@@ -105,12 +103,12 @@ llm = create_llm()
 def load_all_teachers():
     """加载所有导师数据，供 chat_node 和 recommend_node 使用"""
     import json as _json
-    teachers_path = os.path.join(BASE_DIR, "..", "gzhu_teachers.json")
-    # 如果上面路径不对，尝试直接找
+    # 项目根目录：BASE_DIR 是 app/agent/，根目录是 app/agent/../../ (即项目根)
+    project_root = os.path.dirname(os.path.dirname(BASE_DIR))  # app/agent/ -> app/ -> 项目根
+    teachers_path = os.path.join(project_root, "app", "gzhu_teachers.json")
+    # 备用路径
     if not os.path.exists(teachers_path):
-        teachers_path = os.path.join(BASE_DIR, "..", "..", "gzhu_teachers.json")
-    if not os.path.exists(teachers_path):
-        teachers_path = os.path.join(os.path.dirname(BASE_DIR), "gzhu_teachers.json")
+        teachers_path = os.path.join(project_root, "gzhu_teachers.json")
     try:
         with open(teachers_path, "r", encoding="utf-8") as f:
             teachers = _json.load(f)
@@ -731,7 +729,10 @@ def reset_profile_node(state: State):
 def load_teachers_data():
     """加载导师 JSON 数据，返回精简后的列表"""
     import json
-    teachers_path = os.path.join(BASE_DIR, "..", "gzhu_teachers.json")
+    project_root = os.path.dirname(os.path.dirname(BASE_DIR))
+    teachers_path = os.path.join(project_root, "app", "gzhu_teachers.json")
+    if not os.path.exists(teachers_path):
+        teachers_path = os.path.join(project_root, "gzhu_teachers.json")
     try:
         with open(teachers_path, "r", encoding="utf-8") as f:
             teachers = json.load(f)

@@ -112,4 +112,3 @@ def get_cached_teacher_scores(session_id: str) -> Optional[list]:
 def invalidate_teacher_scores(session_id: str):
     """画像更新时，清除该用户的导师评分缓存"""
     cache.delete_pattern(f"teacher_score:{session_id}")
-</code></pre>
