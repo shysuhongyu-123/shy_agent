@@ -336,8 +336,9 @@ function escapeHtml(text) {
 // Markdown 渲染 — 将 Markdown 语法转换为 HTML
 // ============================================================
 function renderMarkdown(text) {
-    // 先转义 HTML
-    let html = escapeHtml(text);
+    // 注意：不转义 HTML！因为 LLM 返回的文本中可能包含 <br> 等合法 HTML 标签
+    // 我们只处理 Markdown 语法，保留原始 HTML 标签
+    let html = text;
     // 1. 标题：### xxx / ## xxx / # xxx
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
