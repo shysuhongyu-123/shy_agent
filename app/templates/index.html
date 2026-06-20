@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mario 帮你挑导师 — 广州大学机械与电气工程学院</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 <link rel="stylesheet" href="/static/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -265,47 +266,6 @@ async function resetProfile() {
     }
 }
 
-async function sendMessage() {
-    let input = document.getElementById("message");
-    let text = input.value.trim();
-    if (!text) return;
-
-    let btn = document.getElementById("sendBtn");
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-    addUserMessage(text);
-    input.value = "";
-    autoResize(input);
-
-    // 显示加载动画
-    let loadingId = showLoading();
-
-    try {
-        let response = await fetch("/chat", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                message: text,
-                session_id: getUserId()
-            })
-        });
-        let data = await response.json();
-
-        // 移除加载动画
-        hideLoading(loadingId);
-
-        // 使用打字机效果显示回复
-        addBotMessageWithTyping(data.reply);
-    } catch (e) {
-        hideLoading(loadingId);
-        addBotMessage("抱歉，我遇到了一些问题，请稍后再试。");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-    }
-}
-
 function quickFillAndSend(text) {
     document.getElementById("message").value = text;
     sendMessage();
@@ -325,62 +285,6 @@ function addUserMessage(text) {
             </div>
         </div>`;
     box.scrollTop = box.scrollHeight;
-}
-
-function addBotMessage(text) {
-    let box = document.getElementById("chat-box");
-    let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
-    let formattedText = escapeHtml(text).replace(/\n/g, '<br>');
-    let msgId = "msg-" + Date.now();
-    box.innerHTML += `
-        <div class="message bot" id="${msgId}">
-            <div class="message-meta">
-                <i class="fas fa-robot"></i>
-                <span class="time">${time}</span>
-            </div>
-            <div class="message-content">
-                <div class="bubble">${formattedText}</div>
-            </div>
-        </div>`;
-    box.scrollTop = box.scrollHeight;
-}
-
-function addBotMessageWithTyping(text) {
-    let box = document.getElementById("chat-box");
-    let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
-    let msgId = "msg-" + Date.now();
-    box.innerHTML += `
-        <div class="message bot" id="${msgId}">
-            <div class="message-meta">
-                <i class="fas fa-robot"></i>
-                <span class="time">${time}</span>
-            </div>
-            <div class="message-content">
-                <div class="bubble typing-bubble" id="${msgId}-text"></div>
-            </div>
-        </div>`;
-    box.scrollTop = box.scrollHeight;
-
-    // 打字机效果：逐字显示
-    let displayText = escapeHtml(text).replace(/\n/g, '<br>');
-    let container = document.getElementById(msgId + "-text");
-    let index = 0;
-    let chars = displayText.split('');
-
-    function typeChar() {
-        if (index < chars.length) {
-            container.innerHTML += chars[index];
-            index++;
-            box.scrollTop = box.scrollHeight;
-            // 根据内容长度动态调整速度
-            let delay = 15;
-            if (chars[index] === '<') delay = 1;  // HTML标签快速跳过
-            setTimeout(typeChar, delay);
-        } else {
-            container.classList.remove("typing-bubble");
-        }
-    }
-    typeChar();
 }
 
 function showLoading() {
@@ -426,6 +330,138 @@ function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ============================================================
+// Markdown 渲染 — 将 Markdown 语法转换为 HTML
+// ============================================================
+function renderMarkdown(text) {
+    // 先转义 HTML
+    let html = escapeHtml(text);
+    // 1. 标题：### xxx / ## xxx / # xxx
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // 2. 粗体：**text**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // 3. 斜体：*text*
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    // 4. 行内代码：`code`
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // 5. 无序列表：- item
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+    // 6. 有序列表：1. item
+    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+    // 7. 换行转 <br>
+    html = html.replace(/\n/g, '<br>');
+    // 8. 修复列表后的多余 <br>
+    html = html.replace(/<\/ul><br>/g, '</ul>');
+    html = html.replace(/<br><ul>/g, '<ul>');
+    return html;
+}
+
+// ============================================================
+// 发送防抖 — 防止快速重复提交
+// ============================================================
+let isSending = false;
+
+async function sendMessage() {
+    let input = document.getElementById("message");
+    let text = input.value.trim();
+    if (!text || isSending) return;
+
+    isSending = true;
+    let btn = document.getElementById("sendBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    addUserMessage(text);
+    input.value = "";
+    autoResize(input);
+
+    // 显示加载动画
+    let loadingId = showLoading();
+
+    try {
+        let response = await fetch("/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                message: text,
+                session_id: getUserId()
+            })
+        });
+        let data = await response.json();
+
+        // 移除加载动画
+        hideLoading(loadingId);
+
+        // 使用打字机效果显示回复（带 Markdown 渲染）
+        addBotMessageWithTyping(data.reply);
+    } catch (e) {
+        hideLoading(loadingId);
+        addBotMessage("抱歉，我遇到了一些问题，请稍后再试。");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        isSending = false;
+    }
+}
+
+function addBotMessage(text) {
+    let box = document.getElementById("chat-box");
+    let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
+    let formattedText = renderMarkdown(text);
+    let msgId = "msg-" + Date.now();
+    box.innerHTML += `
+        <div class="message bot" id="${msgId}">
+            <div class="message-meta">
+                <i class="fas fa-robot"></i>
+                <span class="time">${time}</span>
+            </div>
+            <div class="message-content">
+                <div class="bubble">${formattedText}</div>
+            </div>
+        </div>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function addBotMessageWithTyping(text) {
+    let box = document.getElementById("chat-box");
+    let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
+    let msgId = "msg-" + Date.now();
+    box.innerHTML += `
+        <div class="message bot" id="${msgId}">
+            <div class="message-meta">
+                <i class="fas fa-robot"></i>
+                <span class="time">${time}</span>
+            </div>
+            <div class="message-content">
+                <div class="bubble typing-bubble" id="${msgId}-text"></div>
+            </div>
+        </div>`;
+    box.scrollTop = box.scrollHeight;
+
+    // 打字机效果：逐字显示（先渲染 Markdown，再逐字显示 HTML）
+    let displayHtml = renderMarkdown(text);
+    let container = document.getElementById(msgId + "-text");
+    let index = 0;
+    let chars = displayHtml.split('');
+
+    function typeChar() {
+        if (index < chars.length) {
+            container.innerHTML += chars[index];
+            index++;
+            box.scrollTop = box.scrollHeight;
+            let delay = 15;
+            if (chars[index] === '<') delay = 1;
+            setTimeout(typeChar, delay);
+        } else {
+            container.classList.remove("typing-bubble");
+        }
+    }
+    typeChar();
 }
 
 document.getElementById("message").addEventListener("input", function() {
