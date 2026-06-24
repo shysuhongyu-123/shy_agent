@@ -39,4 +39,7 @@ if os.path.exists(env_path):
                         os.environ[key] = value
 
 # 导入 Flask 应用实例
-from run import app as application
+from run import app
+
+# 兼容 gunicorn 的 wsgi:app 和 wsgi:application 两种写法
+application = app
