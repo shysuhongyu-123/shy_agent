@@ -392,9 +392,9 @@ def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "de
 
     fast_scored.sort(key=lambda x: x["score"], reverse=True)
 
-    # 第二步：只对前 10 名用 LLM 做语义匹配
-    logger.info("第二步：对前 10 名用 LLM 做语义匹配")
-    top_k = fast_scored[:10]
+    # 第二步：只对前 5 名用 LLM 做语义匹配（避免 Render 超时）
+    logger.info("第二步：对前 5 名用 LLM 做语义匹配")
+    top_k = fast_scored[:5]
     for teacher in top_k:
         llm_score = calculate_teacher_score(teacher, user_profile, use_llm=True)
         if llm_score > 0:
