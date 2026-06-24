@@ -15,7 +15,7 @@ from app.profile_db import (
     check_recent_history as db_check_recent_history
 )
 from app.logger import logger
-from app.cache import invalidate_teacher_scores
+from app.cache import invalidate_teacher_scores, cache
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -242,13 +242,48 @@ def update_profile(profile, message, context_messages=None):
     now = datetime.now().strftime("%Y-%m-%d")
 
     # 删除阈值：当 composite_score 低于此值时移除该标签
-    # 一次"不喜欢"（权重-1.0）即可触发删除
     REMOVAL_THRESHOLD = -0.1
 
+    # 处理兴趣标签
     for item in profile_info.get("interests", []):
         name = item["name"]
         weight = item.get("weight", 1.0)
         is_positive = weight >= 0
+
+        # 如果 name 在 INTEREST_MAP 中，检查是否有对应的中文名也存在于画像中
+        # 例如：ai 和 人工智能 是同一个意思，需要同步处理
+        chinese_name = INTEREST_MAP.get(name)
+        if chinese_name and chinese_name in profile["interest"]:
+            # 如果 LLM 返回了英文标签（如 ai），但画像中已有中文标签（如 人工智能）
+            # 用中文标签名继续处理
+            name = chinese_name
+        elif name in INTEREST_MAP.values():
+            # 如果 LLM 返回了中文标签（如 人工智能），检查是否有对应的英文标签在画像中
+            eng_name = None
+            for k, v in INTEREST_MAP.items():
+                if v == name:
+                    eng_name = k
+                    break
+            if eng_name and eng_name in profile["interest"]:
+                # 合并：删除英文标签，用中文标签
+                eng_entry = profile["interest"].pop(eng_name)
+                # 将英文标签的统计数据合并到中文标签
+                if name not in profile["interest"]:
+                    profile["interest"][name] = eng_entry
+                else:
+                    entry = profile["interest"][name]
+                    entry["score"] += eng_entry["score"]
+                    entry["count"] += eng_entry["count"]
+                    entry["positive_count"] += eng_entry["positive_count"]
+                    entry["negative_count"] += eng_entry["negative_count"]
+                    entry["last_update"] = now
+                    entry["composite_score"] = compute_composite(
+                        entry["score"],
+                        entry["positive_count"],
+                        entry["negative_count"],
+                        entry["last_update"]
+                    )
+
         if name not in profile["interest"]:
             profile["interest"][name] = {
                 "score": weight,
@@ -276,10 +311,41 @@ def update_profile(profile, message, context_messages=None):
             # 如果 composite_score 低于阈值，移除该标签
             if entry["composite_score"] < REMOVAL_THRESHOLD:
                 del profile["interest"][name]
+
+    # 处理目标标签
     for item in profile_info.get("goals", []):
         name = item["name"]
         weight = item.get("weight", 1.0)
         is_positive = weight >= 0
+
+        # 目标标签的中英文映射
+        chinese_name = GOAL_MAP.get(name)
+        if chinese_name and chinese_name in profile["goal"]:
+            name = chinese_name
+        elif name in GOAL_MAP.values():
+            eng_name = None
+            for k, v in GOAL_MAP.items():
+                if v == name:
+                    eng_name = k
+                    break
+            if eng_name and eng_name in profile["goal"]:
+                eng_entry = profile["goal"].pop(eng_name)
+                if name not in profile["goal"]:
+                    profile["goal"][name] = eng_entry
+                else:
+                    entry = profile["goal"][name]
+                    entry["score"] += eng_entry["score"]
+                    entry["count"] += eng_entry["count"]
+                    entry["positive_count"] += eng_entry["positive_count"]
+                    entry["negative_count"] += eng_entry["negative_count"]
+                    entry["last_update"] = now
+                    entry["composite_score"] = compute_composite(
+                        entry["score"],
+                        entry["positive_count"],
+                        entry["negative_count"],
+                        entry["last_update"]
+                    )
+
         if name not in profile["goal"]:
             profile["goal"][name] = {
                 "score": weight,
@@ -307,6 +373,7 @@ def update_profile(profile, message, context_messages=None):
             # 如果 composite_score 低于阈值，移除该标签
             if entry["composite_score"] < REMOVAL_THRESHOLD:
                 del profile["goal"][name]
+
     profile["history"].append({"time": now, "message": message, "update": profile_info})
     profile["history"] = profile["history"][-50:]
     return profile, profile_info  # 返回提取结果，用于动态确认
@@ -315,9 +382,10 @@ def update_profile(profile, message, context_messages=None):
 def profile_node(state: State):
     profile, profile_info = update_profile(state["user_profile"], state["user_input"], state.get("messages"))
     logger.info("画像更新后: %s", str({k: list(v.keys()) for k, v in profile.items() if isinstance(v, dict)}))
-    # 画像更新了，清除该用户的导师评分缓存
+    # 画像更新了，清除该用户的导师评分缓存和聊天缓存
     session_id = state.get("session_id", "default")
     invalidate_teacher_scores(session_id)
+    cache.delete_pattern(f"llm:{session_id}:")
     # 将提取的信息暂存到 analysis_result，供 confirm 使用
     return {
         "user_profile": profile,
