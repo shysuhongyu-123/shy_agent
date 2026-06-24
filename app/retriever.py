@@ -270,15 +270,13 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
     """
     综合评分 = 研究方向匹配分 × 0.7 + 课程-目标匹配分 × 0.3
 
+    纯算法匹配，不调用 LLM，避免超时。
     对于预定义标签，使用关键词匹配。
-    对于自由文本标签（不在 KEYWORD_MAP 中的），使用 LLM 做语义匹配。
+    对于自由文本标签（不在 KEYWORD_MAP 中的），使用文本包含匹配。
     """
     # ========== 第一部分：研究方向匹配 ==========
     research_score = 0
     text = " ".join(teacher.get("research", []) + teacher.get("courses", []))
-
-    # 收集需要 LLM 语义匹配的自由文本标签
-    free_text_interests = []
 
     # 兴趣权重
     for profile_tag, info in user_profile.get("interest", {}).items():
@@ -289,8 +287,9 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
             if any(kw in text for kw in keywords):
                 research_score += weight
         else:
-            # 自由文本标签：收集起来，稍后用 LLM 批量匹配
-            free_text_interests.append((profile_tag, weight))
+            # 自由文本标签：用文本包含匹配（检查标签名是否出现在导师的研究方向或课程中）
+            if profile_tag in text:
+                research_score += weight
 
     # 目标权重
     for profile_tag, info in user_profile.get("goal", {}).items():
@@ -300,37 +299,9 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
             if any(kw in text for kw in keywords):
                 research_score += weight
         else:
-            free_text_interests.append((profile_tag, weight))
-
-    # 用 LLM 做语义匹配（批量处理，减少 API 调用）
-    if free_text_interests:
-        llm = _get_llm()
-        if llm:
-            interest_desc = "、".join([f"{name}(权重{weight})" for name, weight in free_text_interests])
-            teacher_research = "、".join(teacher.get("research", []))
-            teacher_courses = "、".join(teacher.get("courses", []))
-            prompt = f"""判断以下用户兴趣与导师的研究方向/课程是否相关。
-只返回一个 JSON 数组，每个元素包含 name 和 score（0.0~1.0，1.0表示高度相关）。
-
-用户兴趣：{interest_desc}
-导师研究方向：{teacher_research}
-导师课程：{teacher_courses}
-
-输出格式：[{{"name":"兴趣名","score":0.8}}]
-如果都不相关，返回 []。只返回 JSON，不要解释。"""
-            try:
-                resp = llm.invoke(prompt)
-                matches = json.loads(resp.content)
-                for m in matches:
-                    name = m["name"]
-                    score = float(m.get("score", 0))
-                    # 找到对应的权重
-                    for tag_name, weight in free_text_interests:
-                        if tag_name == name:
-                            research_score += weight * score
-                            break
-            except Exception as e:
-                logger.error("LLM语义匹配失败: %s", str(e))
+            # 自由文本标签：用文本包含匹配
+            if profile_tag in text:
+                research_score += weight
 
     # ========== 第二部分：课程-目标匹配 ==========
     courses = teacher.get("courses", [])
