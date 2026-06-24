@@ -580,23 +580,13 @@ def recommend_node(state: State):
             )
         teacher_text = "\n".join(teacher_list)
 
-        profile_summary = build_profile_brief(profile)
-
-        # 6. 让 LLM 生成一段总体推荐说明
-        prompt = f"""
-        你是广州大学机械与电气工程学院的导师推荐专家。
-        根据用户画像，请为以下候选导师写一段约150字的推荐说明，说明这些导师为什么适合该学生。
-        不要单独列出导师，只进行总体分析。语言亲切、专业。
-
-        用户画像摘要：
-        {profile_summary}
-
-        候选导师（供参考）：
-        {teacher_text}
-
-        请生成推荐说明：
-        """
-        analysis = llm.invoke(prompt).content
+        # 6. 生成简短推荐说明（不用 LLM，避免超时）
+        # 根据用户画像生成模板化说明
+        interest_names = [NAME_MAP.get(k, k) for k in profile.get("interest", {}).keys()]
+        goal_names = [NAME_MAP.get(k, k) for k in profile.get("goal", {}).keys()]
+        interest_text = "、".join(interest_names) if interest_names else "暂无"
+        goal_text = "、".join(goal_names) if goal_names else "暂无"
+        analysis = f"根据您的兴趣方向（{interest_text}）和目标（{goal_text}），为您推荐以上导师。这些导师的研究方向与您的兴趣高度匹配，建议进一步了解他们的研究详情。"
 
         # 7. 拼接最终回复，加上换一批提示
         final_reply = f"为你找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}\n\n---\n不满意？可以告诉我「换一批」或继续点击推荐按钮，我会为你推荐其他导师。"
