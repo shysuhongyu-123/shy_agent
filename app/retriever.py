@@ -266,20 +266,16 @@ def _get_llm():
     return _llm
 
 
-def calculate_teacher_score(teacher: Dict, user_profile: Dict, use_llm: bool = True) -> float:
+def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
     """
     综合评分 = 研究方向匹配分 × 0.7 + 课程-目标匹配分 × 0.3
 
-    对于预定义标签，使用关键词匹配。
-    对于自由文本标签（不在 KEYWORD_MAP 中的），如果 use_llm=True 则用 LLM 做语义匹配，
-    否则用简单的文本包含匹配。
+    纯算法匹配，不调用 LLM，避免 Render 超时。
+    预定义标签用关键词匹配，自由文本标签用文本包含匹配。
     """
     # ========== 第一部分：研究方向匹配 ==========
     research_score = 0
     text = " ".join(teacher.get("research", []) + teacher.get("courses", []))
-
-    # 收集需要 LLM 语义匹配的自由文本标签
-    free_text_interests = []
 
     # 兴趣权重
     for profile_tag, info in user_profile.get("interest", {}).items():
@@ -289,11 +285,8 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict, use_llm: bool = T
             keywords = KEYWORD_MAP.get(profile_tag, [])
             if any(kw in text for kw in keywords):
                 research_score += weight
-        elif use_llm:
-            # 自由文本标签：收集起来，稍后用 LLM 批量匹配
-            free_text_interests.append((profile_tag, weight))
         else:
-            # 不用 LLM 时，用文本包含匹配
+            # 自由文本标签：文本包含匹配
             if profile_tag in text:
                 research_score += weight
 
@@ -304,41 +297,9 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict, use_llm: bool = T
             keywords = KEYWORD_MAP.get(profile_tag, [])
             if any(kw in text for kw in keywords):
                 research_score += weight
-        elif use_llm:
-            free_text_interests.append((profile_tag, weight))
         else:
             if profile_tag in text:
                 research_score += weight
-
-    # 用 LLM 做语义匹配（批量处理，减少 API 调用）
-    if free_text_interests and use_llm:
-        llm = _get_llm()
-        if llm:
-            interest_desc = "、".join([f"{name}(权重{weight})" for name, weight in free_text_interests])
-            teacher_research = "、".join(teacher.get("research", []))
-            teacher_courses = "、".join(teacher.get("courses", []))
-            prompt = f"""判断以下用户兴趣与导师的研究方向/课程是否相关。
-只返回一个 JSON 数组，每个元素包含 name 和 score（0.0~1.0，1.0表示高度相关）。
-
-用户兴趣：{interest_desc}
-导师研究方向：{teacher_research}
-导师课程：{teacher_courses}
-
-输出格式：[{{"name":"兴趣名","score":0.8}}]
-如果都不相关，返回 []。只返回 JSON，不要解释。"""
-            try:
-                resp = llm.invoke(prompt)
-                matches = json.loads(resp.content)
-                for m in matches:
-                    name = m["name"]
-                    score = float(m.get("score", 0))
-                    # 找到对应的权重
-                    for tag_name, weight in free_text_interests:
-                        if tag_name == name:
-                            research_score += weight * score
-                            break
-            except Exception as e:
-                logger.error("LLM语义匹配失败: %s", str(e))
 
     # ========== 第二部分：课程-目标匹配 ==========
     courses = teacher.get("courses", [])
@@ -366,10 +327,7 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict, use_llm: bool = T
 def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "default") -> List[Dict]:
     """
     推荐导师，带缓存。
-    缓存键基于 session_id，画像更新时自动清除缓存。
-
-    优化策略：先纯算法快速排序（不调 LLM），只对前 10 名用 LLM 做语义匹配，
-    避免 114 次 LLM 调用导致内存溢出。
+    纯算法匹配，不调用 LLM，毫秒级返回。
     """
     # 尝试从缓存获取
     cached = get_cached_teacher_scores(session_id)
@@ -381,37 +339,19 @@ def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "de
     if not teachers:
         return []
 
-    # 第一步：纯算法快速排序（不调 LLM）
-    logger.info("第一步：纯算法快速排序（不调 LLM）")
-    fast_scored = []
+    scored_teachers = []
     for teacher in teachers:
-        score = calculate_teacher_score(teacher, user_profile, use_llm=False)
+        score = calculate_teacher_score(teacher, user_profile)
         if score > 0:
             teacher["score"] = score
-            fast_scored.append(teacher)
+            scored_teachers.append(teacher)
 
-    fast_scored.sort(key=lambda x: x["score"], reverse=True)
-
-    # 第二步：只对前 5 名用 LLM 做语义匹配（避免 Render 超时）
-    logger.info("第二步：对前 5 名用 LLM 做语义匹配")
-    top_k = fast_scored[:5]
-    for teacher in top_k:
-        llm_score = calculate_teacher_score(teacher, user_profile, use_llm=True)
-        if llm_score > 0:
-            teacher["score"] = llm_score
-
-    # 重新排序
-    top_k.sort(key=lambda x: x["score"], reverse=True)
-
-    # 合并：LLM 精排的前几名 + 算法排序的剩余
-    llm_ranked = top_k[:top_n]
-    remaining = [t for t in fast_scored if t not in llm_ranked]
-    all_scored = llm_ranked + remaining
+    scored_teachers.sort(key=lambda x: x["score"], reverse=True)
 
     # 缓存评分结果（前30个）
-    cache_teacher_scores(session_id, all_scored[:30])
+    cache_teacher_scores(session_id, scored_teachers[:30])
 
-    return all_scored[:top_n]
+    return scored_teachers[:top_n]
 
 
 def main():
