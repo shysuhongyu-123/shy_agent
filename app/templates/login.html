@@ -135,24 +135,6 @@ body {
     margin-right: 8px;
 }
 
-.auth-switch {
-    text-align: center;
-    margin-top: 24px;
-    color: #94a3b8;
-    font-size: 14px;
-}
-
-.auth-switch a {
-    color: #60a5fa;
-    text-decoration: none;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.auth-switch a:hover {
-    text-decoration: underline;
-}
-
 .error-msg {
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -168,132 +150,66 @@ body {
     display: block;
 }
 
-.success-msg {
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    color: #86efac;
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-    margin-bottom: 16px;
-    display: none;
-}
-
-.success-msg.show {
-    display: block;
-}
-
-.password-toggle {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
+.hint-text {
+    text-align: center;
     color: #64748b;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.password-toggle:hover {
-    color: #94a3b8;
+    font-size: 13px;
+    margin-top: 20px;
 }
 </style>
 </head>
 <body>
-<div class="auth-container" id="authContainer">
+<div class="auth-container">
     <div class="auth-header">
         <div class="logo">
             <i class="fas fa-robot"></i>
         </div>
-        <h1 id="authTitle">登录</h1>
-        <p id="authSubtitle">广州大学 · 机械与电气工程学院</p>
+        <h1>欢迎使用 Mario</h1>
+        <p>广州大学 · 机械与电气工程学院</p>
     </div>
 
     <div class="error-msg" id="errorMsg"></div>
-    <div class="success-msg" id="successMsg"></div>
 
     <form id="authForm" onsubmit="return handleSubmit(event)">
         <div class="form-group">
-            <label>用户名</label>
+            <label>学号</label>
             <div class="input-wrapper">
-                <i class="fas fa-user"></i>
-                <input type="text" id="username" placeholder="请输入用户名" required autocomplete="username">
+                <i class="fas fa-id-card"></i>
+                <input type="text" id="studentId" placeholder="请输入学号" required autocomplete="off">
             </div>
         </div>
 
         <div class="form-group">
-            <label>密码</label>
+            <label>姓名</label>
             <div class="input-wrapper">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="password" placeholder="请输入密码" required autocomplete="current-password">
-                <i class="fas fa-eye password-toggle" onclick="togglePassword()" id="passwordToggle"></i>
+                <i class="fas fa-user"></i>
+                <input type="text" id="name" placeholder="请输入姓名" required autocomplete="off">
             </div>
         </div>
 
         <button type="submit" class="auth-btn" id="authBtn">
             <i class="fas fa-sign-in-alt"></i>
-            <span>登录</span>
+            <span>进入系统</span>
         </button>
     </form>
 
-    <div class="auth-switch" id="authSwitch">
-        <span>还没有账号？</span>
-        <a onclick="switchMode()">立即注册</a>
+    <div class="hint-text">
+        输入学号和姓名即可使用，无需注册密码
     </div>
 </div>
 
 <script>
-let isLoginMode = true;
-
-function togglePassword() {
-    const input = document.getElementById("password");
-    const icon = document.getElementById("passwordToggle");
-    if (input.type === "password") {
-        input.type = "text";
-        icon.className = "fas fa-eye-slash password-toggle";
-    } else {
-        input.type = "password";
-        icon.className = "fas fa-eye password-toggle";
-    }
-}
-
-function switchMode() {
-    isLoginMode = !isLoginMode;
-    const title = document.getElementById("authTitle");
-    const subtitle = document.getElementById("authSubtitle");
-    const btn = document.getElementById("authBtn");
-    const switchText = document.getElementById("authSwitch");
-    const errorMsg = document.getElementById("errorMsg");
-    const successMsg = document.getElementById("successMsg");
-
-    errorMsg.classList.remove("show");
-    successMsg.classList.remove("show");
-
-    if (isLoginMode) {
-        title.textContent = "登录";
-        subtitle.textContent = "广州大学 · 机械与电气工程学院";
-        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>登录</span>';
-        switchText.innerHTML = '还没有账号？<a onclick="switchMode()">立即注册</a>';
-    } else {
-        title.textContent = "注册";
-        subtitle.textContent = "创建账号，保存你的导师推荐画像";
-        btn.innerHTML = '<i class="fas fa-user-plus"></i> <span>注册</span>';
-        switchText.innerHTML = '已有账号？<a onclick="switchMode()">立即登录</a>';
-    }
-}
-
 async function handleSubmit(event) {
     event.preventDefault();
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
+    const studentId = document.getElementById("studentId").value.trim();
+    const name = document.getElementById("name").value.trim();
     const btn = document.getElementById("authBtn");
     const errorMsg = document.getElementById("errorMsg");
-    const successMsg = document.getElementById("successMsg");
 
     errorMsg.classList.remove("show");
-    successMsg.classList.remove("show");
 
-    if (!username || !password) {
-        errorMsg.textContent = "请填写用户名和密码";
+    if (!studentId || !name) {
+        errorMsg.textContent = "请填写学号和姓名";
         errorMsg.classList.add("show");
         return false;
     }
@@ -302,27 +218,19 @@ async function handleSubmit(event) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>处理中...</span>';
 
     try {
-        const endpoint = isLoginMode ? "/api/login" : "/api/register";
-        const response = await fetch(endpoint, {
+        const response = await fetch("/api/login", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({username, password})
+            body: JSON.stringify({student_id: studentId, name: name})
         });
         const data = await response.json();
 
         if (data.success) {
-            if (isLoginMode) {
-                // 登录成功，保存 token 并跳转到聊天页面
-                localStorage.setItem("gzhu_auth_token", data.token);
-                localStorage.setItem("gzhu_username", data.username);
-                window.location.href = "/";
-            } else {
-                // 注册成功，切换到登录模式
-                successMsg.textContent = "注册成功！请登录";
-                successMsg.classList.add("show");
-                switchMode();
-                document.getElementById("password").value = "";
-            }
+            // 登录成功，保存 token 并跳转到聊天页面
+            localStorage.setItem("gzhu_auth_token", data.token);
+            localStorage.setItem("gzhu_username", data.username);
+            localStorage.setItem("gzhu_student_id", data.student_id);
+            window.location.href = "/";
         } else {
             errorMsg.textContent = data.message;
             errorMsg.classList.add("show");
@@ -332,18 +240,15 @@ async function handleSubmit(event) {
         errorMsg.classList.add("show");
     } finally {
         btn.disabled = false;
-        btn.innerHTML = isLoginMode
-            ? '<i class="fas fa-sign-in-alt"></i> <span>登录</span>'
-            : '<i class="fas fa-user-plus"></i> <span>注册</span>';
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> <span>进入系统</span>';
     }
     return false;
 }
 
-// 如果已经登录，直接跳转到聊天页面（带上 token 参数）
+// 如果已经登录，直接跳转到聊天页面
 window.onload = function() {
     const token = localStorage.getItem("gzhu_auth_token");
     if (token) {
-        // 验证 token 是否有效
         fetch("/api/verify", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
@@ -354,6 +259,7 @@ window.onload = function() {
             } else {
                 localStorage.removeItem("gzhu_auth_token");
                 localStorage.removeItem("gzhu_username");
+                localStorage.removeItem("gzhu_student_id");
             }
         }).catch(() => {});
     }

@@ -23,7 +23,7 @@ if os.path.exists(env_path):
 
 from flask import Flask, request, jsonify, render_template, redirect, Response
 from app.agent.trying import run_agent, get_welcome_message
-from app.user_db import register_user, login_user, validate_token, logout_user
+from app.user_db import register_or_login, validate_token, logout_user
 from app.logger import logger
 from app.cache import (
     cache_llm_response, get_cached_llm_response,
@@ -89,28 +89,17 @@ def login_page():
     return render_template("login.html")
 
 
-@app.route("/api/register", methods=["POST"])
-def api_register():
-    """注册 API"""
-    data = request.get_json()
-    username = data.get("username", "").strip()
-    password = data.get("password", "").strip()
-    result = register_user(username, password)
-    logger.info("用户注册: %s -> %s", username, result.get("message"))
-    return jsonify(result)
-
-
 @app.route("/api/login", methods=["POST"])
 def api_login():
-    """登录 API"""
+    """学号+姓名登录/注册 API（无密码）"""
     data = request.get_json()
-    username = data.get("username", "").strip()
-    password = data.get("password", "").strip()
-    result = login_user(username, password)
+    student_id = data.get("student_id", "").strip()
+    name = data.get("name", "").strip()
+    result = register_or_login(student_id, name)
     if result.get("success"):
-        logger.info("用户登录成功: %s", username)
+        logger.info("用户登录成功: %s(%s)", name, student_id)
     else:
-        logger.warning("用户登录失败: %s - %s", username, result.get("message"))
+        logger.warning("用户登录失败: %s(%s) - %s", name, student_id, result.get("message"))
     return jsonify(result)
 
 
