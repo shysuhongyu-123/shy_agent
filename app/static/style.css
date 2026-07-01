@@ -518,6 +518,60 @@ body {
 }
 
 /* ============================================================
+   导师推荐卡片样式
+   ============================================================ */
+.teacher-card {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: all 0.2s ease;
+}
+
+.teacher-card:hover {
+    box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.teacher-number {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2563eb;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #2563eb;
+    display: inline-block;
+}
+
+.teacher-field {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.field-label {
+    color: #64748b;
+    font-weight: 500;
+    flex-shrink: 0;
+    min-width: 56px;
+}
+
+.field-value {
+    color: #0f172a;
+    word-break: break-all;
+}
+
+.match-score {
+    color: #059669;
+    font-weight: 600;
+}
+
+/* ============================================================
    推荐导师按钮
    ============================================================ */
 .recommend-bar {

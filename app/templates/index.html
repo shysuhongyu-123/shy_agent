@@ -339,6 +339,21 @@ function renderMarkdown(text) {
     // 注意：不转义 HTML！因为 LLM 返回的文本中可能包含 <br> 等合法 HTML 标签
     // 我们只处理 Markdown 语法，保留原始 HTML 标签
     let html = text;
+    
+    // 0. 先处理推荐导师的特殊格式：导师1\n姓名：xxx\n匹配度：xxx
+    //    将其转换为卡片样式
+    html = html.replace(/导师(\d+)\n/g, '<div class="teacher-card"><div class="teacher-number">导师$1</div>');
+    html = html.replace(/姓名：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">姓名</span><span class="field-value">$1</span></div>');
+    html = html.replace(/匹配度：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">匹配度</span><span class="field-value match-score">$1</span></div>');
+    html = html.replace(/研究方向：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">研究方向</span><span class="field-value">$1</span></div>');
+    html = html.replace(/课程：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">课程</span><span class="field-value">$1</span></div>');
+    html = html.replace(/邮箱：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">邮箱</span><span class="field-value">$1</span></div>');
+    html = html.replace(/主页：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">主页</span><span class="field-value">$1</span></div>');
+    // 关闭 teacher-card（在遇到下一个导师或空行时关闭）
+    html = html.replace(/(<\/div>\n)(?=导师\d|<br>|---|$)/g, '$1</div>');
+    // 处理最后一个 card 的闭合
+    html = html.replace(/(<div class="teacher-card">.*?)(?=(<br>|---|$))/gs, '$1</div>');
+    
     // 1. 标题：### xxx / ## xxx / # xxx
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
     html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
@@ -349,20 +364,23 @@ function renderMarkdown(text) {
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
     // 4. 行内代码：`code`
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // 5. 先处理列表（在换行转<br>之前处理，避免<br>干扰）
+    // 5. 列表处理（在换行转<br>之前处理）
     // 5a. 无序列表：- item → <li>item</li>
     html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
     // 5b. 有序列表：1. item → <li>item</li>
     html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-    // 5c. 将连续的 <li> 包裹在 <ul> 中
-    html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
-    // 6. 换行转 <br>（在列表处理之后）
+    // 5c. 将连续的 <li> 包裹在 <ul> 中（改进版，支持跨行）
+    html = html.replace(/((?:<li>[^<]*<\/li>\s*)+)/g, '<ul>$1</ul>');
+    // 6. 换行转 <br>
     html = html.replace(/\n/g, '<br>');
     // 7. 修复列表内多余的 <br>
     html = html.replace(/<\/li><br>/g, '</li>');
     html = html.replace(/<br><li>/g, '<li>');
     html = html.replace(/<\/ul><br>/g, '</ul>');
     html = html.replace(/<br><ul>/g, '<ul>');
+    // 8. 修复 teacher-card 内多余的 <br>
+    html = html.replace(/<div class="teacher-card">\s*<br>/g, '<div class="teacher-card">');
+    html = html.replace(/<\/div>\s*<br>\s*(?=<\/div>)/g, '</div>');
     return html;
 }
 
