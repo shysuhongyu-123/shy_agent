@@ -123,7 +123,21 @@ ALL_TEACHERS = load_all_teachers()
 
 
 def intent_node(state: State):
-    prompt = f"""你是一个意图分类器。根据用户输入，只返回以下词之一：
+    # 构建对话历史上下文
+    history_context = ""
+    messages = state.get("messages", [])
+    if messages:
+        recent_msgs = messages[-6:]  # 最近3轮对话
+        history_lines = []
+        for msg in recent_msgs:
+            if isinstance(msg, HumanMessage):
+                history_lines.append(f"用户：{msg.content[:100]}")
+            elif isinstance(msg, AIMessage):
+                history_lines.append(f"助手：{msg.content[:100]}")
+        if history_lines:
+            history_context = "最近对话历史：\n" + "\n".join(history_lines) + "\n\n"
+
+    prompt = f"""你是一个意图分类器。根据用户输入和对话历史，只返回以下词之一：
     - reset_profile：用户想重置/清空/删除画像（如"重置我的画像"、"清空画像"、"重新开始"、"删除画像"、"重置"）。注意：这是最高优先级，只要用户表达重置意图就返回此值。
     - explore：用户表示迷茫、不知道喜欢什么、想了解各个方向、让系统介绍研究方向（如"我不知道喜欢什么"、"给我介绍一下方向"、"有哪些方向"、"我不知道选什么"、"我不确定"、"帮我看看"、"介绍方向"）。
     - show_profile：用户提及查看画像及其类似语义（如"查看画像"、"我的画像"、"看看我的兴趣"、"当前画像"、"查看用户画像"）。
@@ -143,6 +157,7 @@ def intent_node(state: State):
     - 只有当用户明确表达"我喜欢/我想/我感兴趣/我计划/我的兴趣是"等个人偏好时，才返回 update_profile
     - 如果用户只是提到某个方向名称但没有表达个人偏好（如"网络安全方向"、"机器人方向"），不应视为 update_profile
 
+    {history_context}
     用户输入：{state['user_input']}
 
     只返回一个词，不要解释。"""
@@ -799,30 +814,6 @@ def reset_profile_node(state: State):
     }
 
 
-def load_teachers_data():
-    """加载导师 JSON 数据，返回精简后的列表"""
-    import json
-    project_root = os.path.dirname(os.path.dirname(BASE_DIR))
-    teachers_path = os.path.join(project_root, "app", "gzhu_teachers.json")
-    if not os.path.exists(teachers_path):
-        teachers_path = os.path.join(project_root, "gzhu_teachers.json")
-    try:
-        with open(teachers_path, "r", encoding="utf-8") as f:
-            teachers = json.load(f)
-        # 精简：只保留姓名、研究方向、课程（不暴露邮箱主页等隐私）
-        simplified = []
-        for t in teachers:
-            simplified.append({
-                "name": t.get("name", ""),
-                "research": t.get("research", []),
-                "courses": t.get("courses", [])
-            })
-        return simplified
-    except Exception as e:
-        print("加载导师数据失败:", e)
-        return []
-
-
 def chat_node(state: State):
     """聊天节点，注入全部导师信息，支持查询各类导师问题"""
     session_id = state.get("session_id", "default")
@@ -859,9 +850,21 @@ def chat_node(state: State):
 5. 如果用户问与导师无关的问题，正常闲聊即可
 6. 回答要亲切自然，像朋友在聊天"""
 
-    # 将 system prompt 作为第一条 system 消息
+    # 获取历史消息
     messages = state.get("messages", [])
-    chat_messages = [HumanMessage(content=system_prompt), HumanMessage(content=state["user_input"])]
+    
+    # 构建包含历史上下文的完整消息列表
+    # system_prompt 作为第一条消息，然后是历史对话，最后是当前输入
+    chat_messages = [HumanMessage(content=system_prompt)]
+    
+    # 添加历史对话（最近6轮，让 LLM 感知上下文）
+    if messages:
+        recent_history = messages[-10:]  # 最近10条消息（约5轮对话）
+        chat_messages.extend(recent_history)
+    
+    # 添加当前用户输入
+    chat_messages.append(HumanMessage(content=state["user_input"]))
+    
     response = llm.invoke(chat_messages)
     messages.append(HumanMessage(content=state["user_input"]))
     messages.append(AIMessage(content=response.content))

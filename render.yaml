@@ -3,7 +3,7 @@ services:
     name: shy-agent
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --timeout 180
+    startCommand: gunicorn wsgi:application --bind 0.0.0.0:$PORT --timeout 180
     envVars:
       - key: DEEPSEEK_API_KEY
         sync: false

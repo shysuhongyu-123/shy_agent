@@ -1,7 +1,6 @@
 import json
 import os
-import re
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from app.logger import logger
 from app.cache import cache_teacher_scores, get_cached_teacher_scores

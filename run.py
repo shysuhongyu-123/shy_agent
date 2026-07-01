@@ -21,14 +21,12 @@ if os.path.exists(env_path):
                 if key not in os.environ:
                     os.environ[key] = value
 
-from flask import Flask, request, jsonify, render_template, redirect, Response
+from flask import Flask, request, jsonify, render_template
 from app.agent.trying import run_agent, get_welcome_message
 from app.user_db import register_or_login, validate_token, logout_user
 from app.logger import logger
 from app.cache import (
-    cache_llm_response, get_cached_llm_response,
-    cache_teacher_scores, get_cached_teacher_scores,
-    invalidate_teacher_scores
+    cache_llm_response, get_cached_llm_response
 )
 
 # 指定模板和静态文件夹路径
@@ -189,10 +187,26 @@ def chat():
         # 缓存 LLM 回复
         cache_llm_response(session_id, user_input, response)
 
-        # 更新会话历史
-        history.append({"role": "user", "content": user_input})
-        history.append({"role": "assistant", "content": response})
-        sessions[session_id] = history
+        # 使用 agent 返回的 updated_messages 更新会话历史（保持与 agent 内部状态一致）
+        if updated_messages:
+            new_history = []
+            for msg in updated_messages:
+                if hasattr(msg, 'content'):
+                    if isinstance(msg, HumanMessage):
+                        new_history.append({"role": "user", "content": msg.content})
+                    elif isinstance(msg, AIMessage):
+                        new_history.append({"role": "assistant", "content": msg.content})
+            if new_history:
+                sessions[session_id] = new_history
+            else:
+                # 降级：使用传统方式
+                history.append({"role": "user", "content": user_input})
+                history.append({"role": "assistant", "content": response})
+                sessions[session_id] = history
+        else:
+            history.append({"role": "user", "content": user_input})
+            history.append({"role": "assistant", "content": response})
+            sessions[session_id] = history
 
         logger.info("聊天回复: session=%s, 长度=%d", session_id, len(response))
         return jsonify({"reply": response})

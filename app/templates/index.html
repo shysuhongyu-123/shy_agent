@@ -342,17 +342,17 @@ function renderMarkdown(text) {
     
     // 0. 先处理推荐导师的特殊格式：导师1\n姓名：xxx\n匹配度：xxx
     //    将其转换为卡片样式
-    html = html.replace(/导师(\d+)\n/g, '<div class="teacher-card"><div class="teacher-number">导师$1</div>');
-    html = html.replace(/姓名：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">姓名</span><span class="field-value">$1</span></div>');
-    html = html.replace(/匹配度：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">匹配度</span><span class="field-value match-score">$1</span></div>');
-    html = html.replace(/研究方向：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">研究方向</span><span class="field-value">$1</span></div>');
-    html = html.replace(/课程：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">课程</span><span class="field-value">$1</span></div>');
-    html = html.replace(/邮箱：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">邮箱</span><span class="field-value">$1</span></div>');
-    html = html.replace(/主页：([^\n]+)/g, '<div class="teacher-field"><span class="field-label">主页</span><span class="field-value">$1</span></div>');
-    // 关闭 teacher-card（在遇到下一个导师或空行时关闭）
-    html = html.replace(/(<\/div>\n)(?=导师\d|<br>|---|$)/g, '$1</div>');
-    // 处理最后一个 card 的闭合
-    html = html.replace(/(<div class="teacher-card">.*?)(?=(<br>|---|$))/gs, '$1</div>');
+    // 先按导师块分割（导师1\n...导师2\n...）
+    html = html.replace(/导师(\d+)\n([\s\S]*?)(?=\n导师\d|\n\n|$)/g, function(match, num, content) {
+        // 将每个字段行转换为卡片字段
+        let fields = content.replace(/姓名：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">姓名：</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/匹配度：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">匹配度：</span><span class="field-value match-score">$1</span></div>');
+        fields = fields.replace(/研究方向：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">研究方向：</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/课程：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">课程：</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/邮箱：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">邮箱：</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/主页：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">主页：</span><span class="field-value">$1</span></div>');
+        return '<div class="teacher-card"><div class="teacher-number">导师' + num + '</div>' + fields + '</div>';
+    });
     
     // 1. 标题：### xxx / ## xxx / # xxx
     html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
@@ -493,18 +493,30 @@ function addBotMessageWithTyping(text) {
     }
 
     let index = 0;
+    let userScrolledUp = false;
+
+    // 检测用户是否手动滚动了
+    box.addEventListener('scroll', function() {
+        // 如果用户向上滚动超过 30px，标记为用户手动滚动
+        const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
+        userScrolledUp = !atBottom;
+    });
 
     function typeChar() {
         if (index < tokens.length) {
             container.innerHTML += tokens[index];
             index++;
-            box.scrollTop = box.scrollHeight;
+            // 只在用户没有手动向上滚动时自动滚动
+            if (!userScrolledUp) {
+                box.scrollTop = box.scrollHeight;
+            }
             let delay = 15;
             // HTML 标签快速跳过
             if (tokens[index] && tokens[index].startsWith('<')) delay = 1;
             setTimeout(typeChar, delay);
         } else {
             container.classList.remove("typing-bubble");
+            // 打字结束后，如果用户之前滚上去了，不强制拉下来
         }
     }
     typeChar();
