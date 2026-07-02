@@ -182,7 +182,8 @@ def chat():
 
     try:
         # 调用 agent（传入 session_id 以支持多用户隔离）
-        response, updated_messages = run_agent(user_input, messages, session_id=session_id)
+        # run_agent 现在返回 (response, updated_messages, teachers)
+        response, updated_messages, teachers = run_agent(user_input, messages, session_id=session_id)
 
         # 缓存 LLM 回复
         cache_llm_response(session_id, user_input, response)
@@ -209,6 +210,10 @@ def chat():
             sessions[session_id] = history
 
         logger.info("聊天回复: session=%s, 长度=%d", session_id, len(response))
+
+        # 检查是否有导师推荐数据
+        if teachers:
+            return jsonify({"reply": response, "teachers": teachers})
         return jsonify({"reply": response})
     except Exception as e:
         logger.error("聊天处理异常: session=%s, error=%s", session_id, str(e))

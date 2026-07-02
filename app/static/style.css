@@ -617,6 +617,270 @@ body {
 }
 
 /* ============================================================
+   推荐导师浮窗
+   ============================================================ */
+.recommend-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 999;
+    animation: fadeInOverlay 0.2s ease;
+}
+
+.recommend-overlay.show {
+    display: block;
+}
+
+.recommend-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 680px;
+    max-width: 92vw;
+    max-height: 80vh;
+    background: #f8fafc;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    flex-direction: column;
+    animation: popIn 0.3s ease;
+}
+
+.recommend-popup.show {
+    display: flex;
+}
+
+.recommend-popup-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.recommend-popup-header i {
+    color: var(--primary);
+    font-size: 18px;
+}
+
+.recommend-popup-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.recommend-popup-close:hover {
+    color: var(--text-primary);
+}
+
+.recommend-popup-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    min-height: 200px;
+    max-height: 55vh;
+}
+
+.recommend-popup-body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.recommend-popup-body::-webkit-scrollbar-thumb {
+    background: #c0c4cc;
+    border-radius: 3px;
+}
+
+.recommend-loading {
+    text-align: center;
+    color: var(--text-light);
+    padding: 40px 20px;
+    font-size: 14px;
+}
+
+.recommend-popup-footer {
+    display: flex;
+    gap: 10px;
+    padding: 12px 20px;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.recommend-btn-secondary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.recommend-btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+/* 导师卡片网格 */
+.teacher-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+/* 单个导师气泡卡片 */
+.teacher-card-bubble {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.25s ease;
+}
+
+.teacher-card-bubble:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
+}
+
+.tcb-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.tcb-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #06b6d4);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.tcb-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.tcb-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.tcb-score {
+    font-size: 11px;
+    font-weight: 600;
+    color: #059669;
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    padding: 1px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.tcb-body {
+    padding: 8px 14px 12px;
+}
+
+.tcb-field {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 3px;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.tcb-field:last-child {
+    margin-bottom: 0;
+}
+
+.tcb-label {
+    color: #94a3b8;
+    flex-shrink: 0;
+    min-width: 44px;
+    font-size: 11px;
+}
+
+.tcb-value {
+    color: #475569;
+    word-break: break-word;
+}
+
+.tcb-email {
+    color: #2563eb;
+    font-size: 11px;
+}
+
+.tcb-link a {
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+.tcb-link a:hover {
+    text-decoration: underline;
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+    .recommend-popup {
+        width: 95vw;
+        max-height: 85vh;
+    }
+
+    .teacher-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .recommend-popup-body {
+        padding: 12px 14px;
+    }
+
+    .tcb-header {
+        padding: 10px 12px 6px;
+    }
+
+    .tcb-body {
+        padding: 6px 12px 10px;
+    }
+}
+
+/* ============================================================
    推荐导师按钮
    ============================================================ */
 .recommend-bar {

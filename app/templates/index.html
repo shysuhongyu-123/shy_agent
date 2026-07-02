@@ -57,13 +57,13 @@
                 <span>Mario</span>
             </div>
             <div class="header-right">
-                <!-- 查看画像按钮（可展开的小便签） -->
+                <!-- 查看画像按钮 -->
                 <div class="profile-badge" id="profileBadge" onclick="toggleProfile()">
                     <i class="fas fa-id-card"></i>
                     <span>查看画像</span>
                     <i class="fas fa-chevron-down badge-arrow"></i>
                 </div>
-                <!-- 画像内容浮窗 -->
+                <!-- 画像浮窗 -->
                 <div class="profile-popup" id="profilePopup">
                     <div class="profile-popup-header">
                         <i class="fas fa-id-card"></i>
@@ -85,9 +85,26 @@
                 <!-- 遮罩层 -->
                 <div class="profile-overlay" id="profileOverlay" onclick="toggleProfile()"></div>
 
+                <!-- 推荐导师浮窗 -->
+                <div class="recommend-overlay" id="recommendOverlay" onclick="closeRecommend()"></div>
+                <div class="recommend-popup" id="recommendPopup">
+                    <div class="recommend-popup-header">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>推荐导师</span>
+                        <button class="recommend-popup-close" onclick="closeRecommend()">&times;</button>
+                    </div>
+                    <div class="recommend-popup-body" id="recommendPopupBody">
+                        <div class="recommend-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>
+                    </div>
+                    <div class="recommend-popup-footer">
+                        <button class="recommend-btn recommend-btn-secondary" onclick="quickFillAndSend('换一批')" style="flex:1;padding:10px 20px;border-radius:10px;font-size:14px;">
+                            <i class="fas fa-sync-alt"></i> 换一批
+                        </button>
+                    </div>
+                </div>
+
                 <span class="status-dot"></span>
                 <span class="status-text">在线</span>
-                <!-- 用户信息与登出 -->
                 <span class="user-badge" id="userBadge" style="display:none;margin-left:12px;padding:4px 10px;background:rgba(255,255,255,0.08);border-radius:8px;font-size:13px;color:#94a3b8;">
                     <i class="fas fa-user"></i>
                     <span id="usernameDisplay"></span>
@@ -103,15 +120,10 @@
         </div>
 
         <div class="input-area">
-            <!-- 推荐导师按钮 — 放在对话框上方 -->
             <div class="recommend-bar">
                 <button class="recommend-btn" onclick="quickFillAndSend('推荐导师')">
                     <i class="fas fa-graduation-cap"></i>
                     <span>推荐导师</span>
-                </button>
-                <button class="recommend-btn recommend-btn-secondary" onclick="quickFillAndSend('换一批')" style="margin-left:8px;background:linear-gradient(135deg,#64748b,#475569);">
-                    <i class="fas fa-sync-alt"></i>
-                    <span>换一批</span>
                 </button>
             </div>
             <div class="input-wrapper">
@@ -130,7 +142,7 @@
 
 <script>
 // ============================================================
-// 用户认证 — 基于 token 的登录系统
+// 用户认证
 // ============================================================
 
 function getAuthToken() {
@@ -142,13 +154,11 @@ function getUsername() {
 }
 
 function getUserId() {
-    // 优先使用登录后的用户名作为 session_id
     const token = getAuthToken();
     if (token) {
         const username = getUsername();
         if (username) return `user_${username}`;
     }
-    // 降级：使用 localStorage 生成的 UUID（兼容旧版）
     let userId = localStorage.getItem("gzhu_user_session_id");
     if (!userId) {
         userId = crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -161,21 +171,17 @@ function getUserId() {
 }
 
 function checkAuth() {
-    // 优先从 URL 参数获取 token（从登录页跳转过来时）
     const urlParams = new URLSearchParams(window.location.search);
     const urlToken = urlParams.get("token");
     if (urlToken) {
         localStorage.setItem("gzhu_auth_token", urlToken);
-        // 清除 URL 参数，避免刷新后重复处理
         window.history.replaceState({}, "", "/");
     }
-
     const token = getAuthToken();
     if (!token) {
         window.location.href = "/login";
         return false;
     }
-    // 显示用户名
     const username = getUsername();
     const badge = document.getElementById("userBadge");
     const display = document.getElementById("usernameDisplay");
@@ -200,10 +206,8 @@ function logout() {
     window.location.href = "/login";
 }
 
-// 页面加载时检查登录状态并获取欢迎消息
 window.onload = async function() {
     if (!checkAuth()) return;
-
     try {
         let response = await fetch("/welcome", {
             method: "POST",
@@ -218,7 +222,7 @@ window.onload = async function() {
 };
 
 // ============================================================
-// 画像浮窗控制
+// 画像浮窗
 // ============================================================
 function toggleProfile() {
     document.getElementById("profileBadge").classList.toggle("active");
@@ -265,6 +269,71 @@ async function resetProfile() {
         body.innerHTML = '<div class="profile-loading">重置失败，请重试</div>';
     }
 }
+
+// ============================================================
+// 推荐导师浮窗
+// ============================================================
+function openRecommend(teachers) {
+    document.getElementById("recommendPopup").classList.add("show");
+    document.getElementById("recommendOverlay").classList.add("show");
+    renderTeacherCards(teachers);
+}
+
+function closeRecommend() {
+    document.getElementById("recommendPopup").classList.remove("show");
+    document.getElementById("recommendOverlay").classList.remove("show");
+}
+
+function renderTeacherCards(teachers) {
+    let body = document.getElementById("recommendPopupBody");
+    if (!teachers || teachers.length === 0) {
+        body.innerHTML = '<div class="recommend-loading">暂无匹配导师，请先告诉我您的兴趣方向。</div>';
+        return;
+    }
+    let html = '<div class="teacher-grid">';
+    teachers.forEach(function(t, idx) {
+        let research = Array.isArray(t.research) ? t.research.join('、') : (t.research || '暂无');
+        let courses = Array.isArray(t.courses) ? t.courses.join('、') : (t.courses || '暂无');
+        let email = t.email || '';
+        let homepage = t.homepage || '';
+        let score = t.score || '';
+        html += `
+            <div class="teacher-card-bubble">
+                <div class="tcb-header">
+                    <div class="tcb-avatar">${t.name.charAt(0)}</div>
+                    <div class="tcb-name-row">
+                        <span class="tcb-name">${escapeHtml(t.name)}</span>
+                        ${score ? `<span class="tcb-score">${escapeHtml(score)}</span>` : ''}
+                    </div>
+                </div>
+                <div class="tcb-body">
+                    <div class="tcb-field">
+                        <span class="tcb-label">研究方向</span>
+                        <span class="tcb-value">${escapeHtml(research)}</span>
+                    </div>
+                    <div class="tcb-field">
+                        <span class="tcb-label">课程</span>
+                        <span class="tcb-value">${escapeHtml(courses)}</span>
+                    </div>
+                    ${email ? `<div class="tcb-field">
+                        <span class="tcb-label">邮箱</span>
+                        <span class="tcb-value tcb-email">${escapeHtml(email)}</span>
+                    </div>` : ''}
+                    ${homepage ? `<div class="tcb-field">
+                        <span class="tcb-label">主页</span>
+                        <span class="tcb-value tcb-link"><a href="${escapeHtml(homepage)}" target="_blank" rel="noopener">查看主页 <i class="fas fa-external-link-alt"></i></a></span>
+                    </div>` : ''}
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+}
+
+// ============================================================
+// 聊天功能
+// ============================================================
 
 function quickFillAndSend(text) {
     document.getElementById("message").value = text;
@@ -333,71 +402,7 @@ function escapeHtml(text) {
 }
 
 // ============================================================
-// Markdown 渲染 — 将 Markdown 语法转换为 HTML
-// ============================================================
-function renderMarkdown(text) {
-    // 注意：不转义 HTML！因为 LLM 返回的文本中可能包含 <br> 等合法 HTML 标签
-    // 我们只处理 Markdown 语法，保留原始 HTML 标签
-    let html = text;
-    
-    // 0. 先处理推荐导师的特殊格式：导师1\n姓名：xxx\n匹配度：xxx
-    //    将其转换为卡片样式
-    // 先按导师块分割（导师1\n...导师2\n...）
-    // 改进：支持更多格式变体，如 "导师 1"、"导师1:" 等
-    html = html.replace(/导师\s*(\d+)\s*[:：]?\s*\n([\s\S]*?)(?=\n导师\s*\d|$)/g, function(match, num, content) {
-        // 将每个字段行转换为卡片字段
-        let fields = content;
-        // 先移除字段名中的冒号前后空格，统一格式
-        fields = fields.replace(/姓名\s*[:：]\s*/g, '姓名：');
-        fields = fields.replace(/匹配度\s*[:：]\s*/g, '匹配度：');
-        fields = fields.replace(/研究方向\s*[:：]\s*/g, '研究方向：');
-        fields = fields.replace(/课程\s*[:：]\s*/g, '课程：');
-        fields = fields.replace(/邮箱\s*[:：]\s*/g, '邮箱：');
-        fields = fields.replace(/主页\s*[:：]\s*/g, '主页：');
-        
-        fields = fields.replace(/姓名：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">姓名</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/匹配度：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">匹配度</span><span class="field-value match-score">$1</span></div>');
-        fields = fields.replace(/研究方向：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">研究方向</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/课程：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">课程</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/邮箱：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">邮箱</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/主页：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">主页</span><span class="field-value">$1</span></div>');
-        return '<div class="teacher-card"><div class="teacher-number">导师 ' + num + '</div>' + fields + '</div>';
-    });
-    
-    // 1. 标题：### xxx / ## xxx / # xxx
-    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-    // 2. 粗体：**text**
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    // 3. 斜体：*text*
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    // 4. 行内代码：`code`
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // 5. 列表处理（在换行转<br>之前处理）
-    // 5a. 无序列表：- item → <li>item</li>
-    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-    // 5b. 有序列表：1. item → <li>item</li>
-    html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-    // 5c. 将连续的 <li> 包裹在 <ul> 中（改进版，支持跨行）
-    html = html.replace(/((?:<li>[^<]*<\/li>\s*)+)/g, '<ul>$1</ul>');
-    // 6. 换行转 <br>
-    html = html.replace(/\n/g, '<br>');
-    // 7. 修复列表内多余的 <br>
-    html = html.replace(/<\/li><br>/g, '</li>');
-    html = html.replace(/<br><li>/g, '<li>');
-    html = html.replace(/<\/ul><br>/g, '</ul>');
-    html = html.replace(/<br><ul>/g, '<ul>');
-    // 8. 修复 teacher-card 内多余的 <br>
-    html = html.replace(/<div class="teacher-card">\s*<br>/g, '<div class="teacher-card">');
-    html = html.replace(/<\/div>\s*<br>\s*(?=<\/div>)/g, '</div>');
-    // 9. 修复 teacher-card 内字段行之间多余的 <br>
-    html = html.replace(/(<\/div>)\s*<br>\s*(?=<div class="teacher-field")/g, '$1');
-    return html;
-}
-
-// ============================================================
-// 发送防抖 — 防止快速重复提交
+// 发送消息
 // ============================================================
 let isSending = false;
 
@@ -415,7 +420,6 @@ async function sendMessage() {
     input.value = "";
     autoResize(input);
 
-    // 显示加载动画
     let loadingId = showLoading();
 
     try {
@@ -429,11 +433,17 @@ async function sendMessage() {
         });
         let data = await response.json();
 
-        // 移除加载动画
         hideLoading(loadingId);
 
-        // 使用打字机效果显示回复（带 Markdown 渲染）
-        addBotMessageWithTyping(data.reply);
+        // 检查是否有导师推荐数据
+        if (data.teachers && Array.isArray(data.teachers) && data.teachers.length > 0) {
+            // 有导师推荐数据，弹出浮窗
+            addBotMessage("为您找到以下匹配导师：");
+            openRecommend(data.teachers);
+        } else {
+            // 普通回复，打字机效果
+            addBotMessageWithTyping(data.reply);
+        }
     } catch (e) {
         hideLoading(loadingId);
         addBotMessage("抱歉，我遇到了一些问题，请稍后再试。");
@@ -447,7 +457,6 @@ async function sendMessage() {
 function addBotMessage(text) {
     let box = document.getElementById("chat-box");
     let time = new Date().toLocaleTimeString("zh-CN", {hour: "2-digit", minute: "2-digit"});
-    let formattedText = renderMarkdown(text);
     let msgId = "msg-" + Date.now();
     box.innerHTML += `
         <div class="message bot" id="${msgId}">
@@ -456,7 +465,7 @@ function addBotMessage(text) {
                 <span class="time">${time}</span>
             </div>
             <div class="message-content">
-                <div class="bubble">${formattedText}</div>
+                <div class="bubble">${text}</div>
             </div>
         </div>`;
     box.scrollTop = box.scrollHeight;
@@ -478,17 +487,13 @@ function addBotMessageWithTyping(text) {
         </div>`;
     box.scrollTop = box.scrollHeight;
 
-    // 先渲染 Markdown
-    let displayHtml = renderMarkdown(text);
+    let displayHtml = text.replace(/\n/g, '<br>');
     let container = document.getElementById(msgId + "-text");
 
-    // 将 HTML 按标签块拆分，避免逐字添加破坏 HTML 标签
-    // 例如 "<br>" 作为一个整体添加，而不是拆成 '<' 'b' 'r' '>'
     let tokens = [];
     let i = 0;
     while (i < displayHtml.length) {
         if (displayHtml[i] === '<') {
-            // 找到完整的 HTML 标签
             let end = displayHtml.indexOf('>', i);
             if (end !== -1) {
                 tokens.push(displayHtml.substring(i, end + 1));
@@ -498,7 +503,6 @@ function addBotMessageWithTyping(text) {
                 i++;
             }
         } else {
-            // 普通文本，按字符拆分
             tokens.push(displayHtml[i]);
             i++;
         }
@@ -507,9 +511,7 @@ function addBotMessageWithTyping(text) {
     let index = 0;
     let userScrolledUp = false;
 
-    // 检测用户是否手动滚动了
     box.addEventListener('scroll', function() {
-        // 如果用户向上滚动超过 30px，标记为用户手动滚动
         const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 30;
         userScrolledUp = !atBottom;
     });
@@ -518,17 +520,14 @@ function addBotMessageWithTyping(text) {
         if (index < tokens.length) {
             container.innerHTML += tokens[index];
             index++;
-            // 只在用户没有手动向上滚动时自动滚动
             if (!userScrolledUp) {
                 box.scrollTop = box.scrollHeight;
             }
             let delay = 15;
-            // HTML 标签快速跳过
             if (tokens[index] && tokens[index].startsWith('<')) delay = 1;
             setTimeout(typeChar, delay);
         } else {
             container.classList.remove("typing-bubble");
-            // 打字结束后，如果用户之前滚上去了，不强制拉下来
         }
     }
     typeChar();

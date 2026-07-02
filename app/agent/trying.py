@@ -671,15 +671,28 @@ def recommend_node(state: State):
         goal_text = "、".join(goal_names) if goal_names else "暂无"
         analysis = f"根据您的兴趣方向（{interest_text}）和目标（{goal_text}），为您推荐以上导师。这些导师的研究方向与您的兴趣高度匹配，建议进一步了解他们的研究详情。"
 
-        # 7. 拼接最终回复，加上换一批提示
-        final_reply = f"为你找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}\n\n---\n不满意？可以告诉我「换一批」或继续点击推荐按钮，我会为你推荐其他导师。"
+        # 7. 构建导师 JSON 数据（供前端浮窗展示）
+        teacher_json = []
+        for t in teachers:
+            teacher_json.append({
+                "name": t['name'],
+                "score": t['score'],
+                "research": t.get('research', []),
+                "courses": t.get('courses', []),
+                "email": t.get('email', ''),
+                "homepage": t.get('homepage', '')
+            })
+
+        # 8. 拼接最终回复
+        final_reply = f"为您找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}\n\n---\n不满意？可以告诉我「换一批」或继续点击推荐按钮，我会为你推荐其他导师。"
         messages = state.get("messages", []) + [
             HumanMessage(content=state["user_input"]),
             AIMessage(content=final_reply)
         ]
         return {
             "response": final_reply,
-            "messages": messages
+            "messages": messages,
+            "teachers": teacher_json  # 新增：导师 JSON 数据
         }
     except Exception as e:
         # 兜底：如果推荐出错，返回友好提示
@@ -947,7 +960,9 @@ def run_agent(user_input, messages=None, session_id="default"):
     if result.get("intent") == "update_profile":
         save_profile(result.get("user_profile", profile), session_id)
 
-    return result["response"], result.get("messages", messages)
+    # 返回 response, messages, 以及可选的 teachers 数据
+    teachers = result.get("teachers")
+    return result["response"], result.get("messages", messages), teachers
 
 
 def get_welcome_message(session_id="default"):
