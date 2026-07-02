@@ -881,13 +881,17 @@ body {
     transition: max-height 0.3s ease;
 }
 
-.tcb-achievements::after {
-    content: '展开';
-    display: block;
+.tcb-achievements .expand-btn {
+    display: none;
     color: #2563eb;
     font-size: 10px;
     font-weight: 500;
     margin-top: 2px;
+    cursor: pointer;
+}
+
+.tcb-achievements.expandable .expand-btn {
+    display: block;
 }
 
 .tcb-achievements.expanded {
@@ -896,8 +900,8 @@ body {
     display: block;
 }
 
-.tcb-achievements.expanded::after {
-    content: '收起';
+.tcb-achievements.expanded .expand-btn {
+    display: block;
 }
 
 /* 手机端适配 */

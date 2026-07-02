@@ -284,6 +284,23 @@ function closeRecommend() {
     document.getElementById("recommendOverlay").classList.remove("show");
 }
 
+function toggleAchievements(el) {
+    // 如果内容不需要展开（没有超出），直接返回
+    if (el.scrollHeight <= el.clientHeight && !el.classList.contains('expanded')) {
+        return;
+    }
+    el.classList.toggle('expanded');
+    // 切换展开/收起按钮文字
+    let btn = el.querySelector('.expand-btn');
+    if (btn) {
+        if (el.classList.contains('expanded')) {
+            btn.innerHTML = '收起 <i class="fas fa-chevron-up"></i>';
+        } else {
+            btn.innerHTML = '展开 <i class="fas fa-chevron-down"></i>';
+        }
+    }
+}
+
 function renderTeacherCards(teachers) {
     let body = document.getElementById("recommendPopupBody");
     if (!teachers || teachers.length === 0) {
@@ -333,7 +350,7 @@ function renderTeacherCards(teachers) {
                     </div>` : ''}
                     ${achievements ? `<div class="tcb-field">
                         <span class="tcb-label">科研成果</span>
-                        <span class="tcb-value tcb-achievements" onclick="this.classList.toggle('expanded')">${escapeHtml(achievements)}</span>
+                        <span class="tcb-value tcb-achievements" onclick="toggleAchievements(this)">${escapeHtml(achievements)}<span class="expand-btn">展开 <i class="fas fa-chevron-down"></i></span></span>
                     </div>` : ''}
                     ${email ? `<div class="tcb-field">
                         <span class="tcb-label">邮箱</span>
