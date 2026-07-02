@@ -330,8 +330,8 @@ def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "de
     """
     # 尝试从缓存获取
     cached = get_cached_teacher_scores(session_id)
-    if cached is not None:
-        logger.info("导师评分缓存命中: session=%s", session_id)
+    if cached is not None and len(cached) > 0:
+        logger.info("导师评分缓存命中: session=%s, 数量=%d", session_id, len(cached))
         return cached[:top_n]
 
     teachers = load_teachers()
