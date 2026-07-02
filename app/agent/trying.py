@@ -85,6 +85,7 @@ class State(TypedDict):
     response: str              # 助手回复
     next_step: str             # 流程位置
     session_id: str            # 会话ID，用于多用户隔离
+    teachers: list             # 推荐导师数据（供前端浮窗展示）
 
 
 def create_llm():
@@ -939,7 +940,8 @@ def run_agent(user_input, messages=None, session_id="default"):
         "approval": False,
         "response": "",
         "next_step": "",
-        "session_id": session_id
+        "session_id": session_id,
+        "teachers": []
     })
 
     # 获取最新的画像（优先使用 result 中更新过的，否则从数据库读取）
