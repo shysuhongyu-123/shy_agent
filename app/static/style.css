@@ -882,25 +882,18 @@ body {
 }
 
 .tcb-achievements .expand-btn {
-    display: none;
+    display: block;
     color: #2563eb;
     font-size: 10px;
     font-weight: 500;
     margin-top: 2px;
     cursor: pointer;
-}
-
-.tcb-achievements.expandable .expand-btn {
-    display: block;
+    user-select: none;
 }
 
 .tcb-achievements.expanded {
     max-height: 300px;
     -webkit-line-clamp: unset;
-    display: block;
-}
-
-.tcb-achievements.expanded .expand-btn {
     display: block;
 }
 
