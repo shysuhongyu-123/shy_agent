@@ -819,9 +819,9 @@ def chat_node(state: State):
     session_id = state.get("session_id", "default")
     profile = load_profile(session_id)
 
-    # 构建全部导师信息摘要（不再限制前10个）
+    # 构建导师信息摘要（限制前15个，避免prompt过大导致OOM）
     teacher_summary = ""
-    for t in ALL_TEACHERS:
+    for t in ALL_TEACHERS[:15]:
         research = "、".join(t.get("research", [])) or "暂无"
         courses = "、".join(t.get("courses", [])) or "暂无"
         teacher_summary += f"- {t['name']}：研究方向【{research}】，课程【{courses}】\n"
