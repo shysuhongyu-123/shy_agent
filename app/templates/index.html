@@ -343,15 +343,25 @@ function renderMarkdown(text) {
     // 0. 先处理推荐导师的特殊格式：导师1\n姓名：xxx\n匹配度：xxx
     //    将其转换为卡片样式
     // 先按导师块分割（导师1\n...导师2\n...）
-    html = html.replace(/导师(\d+)\n([\s\S]*?)(?=\n导师\d|\n\n|$)/g, function(match, num, content) {
+    // 改进：支持更多格式变体，如 "导师 1"、"导师1:" 等
+    html = html.replace(/导师\s*(\d+)\s*[:：]?\s*\n([\s\S]*?)(?=\n导师\s*\d|$)/g, function(match, num, content) {
         // 将每个字段行转换为卡片字段
-        let fields = content.replace(/姓名：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">姓名：</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/匹配度：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">匹配度：</span><span class="field-value match-score">$1</span></div>');
-        fields = fields.replace(/研究方向：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">研究方向：</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/课程：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">课程：</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/邮箱：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">邮箱：</span><span class="field-value">$1</span></div>');
-        fields = fields.replace(/主页：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">主页：</span><span class="field-value">$1</span></div>');
-        return '<div class="teacher-card"><div class="teacher-number">导师' + num + '</div>' + fields + '</div>';
+        let fields = content;
+        // 先移除字段名中的冒号前后空格，统一格式
+        fields = fields.replace(/姓名\s*[:：]\s*/g, '姓名：');
+        fields = fields.replace(/匹配度\s*[:：]\s*/g, '匹配度：');
+        fields = fields.replace(/研究方向\s*[:：]\s*/g, '研究方向：');
+        fields = fields.replace(/课程\s*[:：]\s*/g, '课程：');
+        fields = fields.replace(/邮箱\s*[:：]\s*/g, '邮箱：');
+        fields = fields.replace(/主页\s*[:：]\s*/g, '主页：');
+        
+        fields = fields.replace(/姓名：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">姓名</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/匹配度：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">匹配度</span><span class="field-value match-score">$1</span></div>');
+        fields = fields.replace(/研究方向：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">研究方向</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/课程：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">课程</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/邮箱：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">邮箱</span><span class="field-value">$1</span></div>');
+        fields = fields.replace(/主页：([^\n]*)/g, '<div class="teacher-field"><span class="field-label">主页</span><span class="field-value">$1</span></div>');
+        return '<div class="teacher-card"><div class="teacher-number">导师 ' + num + '</div>' + fields + '</div>';
     });
     
     // 1. 标题：### xxx / ## xxx / # xxx
@@ -381,6 +391,8 @@ function renderMarkdown(text) {
     // 8. 修复 teacher-card 内多余的 <br>
     html = html.replace(/<div class="teacher-card">\s*<br>/g, '<div class="teacher-card">');
     html = html.replace(/<\/div>\s*<br>\s*(?=<\/div>)/g, '</div>');
+    // 9. 修复 teacher-card 内字段行之间多余的 <br>
+    html = html.replace(/(<\/div>)\s*<br>\s*(?=<div class="teacher-field")/g, '$1');
     return html;
 }
 
