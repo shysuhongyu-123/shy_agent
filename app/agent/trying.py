@@ -710,7 +710,11 @@ def recommend_node(state: State):
                 "research": t.get('research', []),
                 "courses": t.get('courses', []),
                 "email": t.get('email', ''),
-                "homepage": t.get('homepage', '')
+                "homepage": t.get('homepage', ''),
+                "title": t.get('title', []),
+                "supervisor_type": t.get('supervisor_type', ''),
+                "office": t.get('office', ''),
+                "achievements": t.get('achievements', [])
             })
 
         # 8. 拼接最终回复

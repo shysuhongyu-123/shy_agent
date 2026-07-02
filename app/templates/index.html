@@ -297,6 +297,10 @@ function renderTeacherCards(teachers) {
         let email = t.email || '';
         let homepage = t.homepage || '';
         let score = t.score || '';
+        let title = Array.isArray(t.title) ? t.title.join('、') : (t.title || '');
+        let supervisor_type = t.supervisor_type || '';
+        let office = t.office || '';
+        let achievements = Array.isArray(t.achievements) ? t.achievements.slice(0, 3).join('；') : (t.achievements || '');
         html += `
             <div class="teacher-card-bubble">
                 <div class="tcb-header">
@@ -307,14 +311,30 @@ function renderTeacherCards(teachers) {
                     </div>
                 </div>
                 <div class="tcb-body">
+                    ${title ? `<div class="tcb-field">
+                        <span class="tcb-label">职称</span>
+                        <span class="tcb-value">${escapeHtml(title)}</span>
+                    </div>` : ''}
+                    ${supervisor_type ? `<div class="tcb-field">
+                        <span class="tcb-label">导师类型</span>
+                        <span class="tcb-value tcb-tag">${escapeHtml(supervisor_type)}</span>
+                    </div>` : ''}
                     <div class="tcb-field">
                         <span class="tcb-label">研究方向</span>
                         <span class="tcb-value">${escapeHtml(research)}</span>
                     </div>
-                    <div class="tcb-field">
+                    ${office ? `<div class="tcb-field">
+                        <span class="tcb-label">办公地点</span>
+                        <span class="tcb-value">${escapeHtml(office)}</span>
+                    </div>` : ''}
+                    ${courses ? `<div class="tcb-field">
                         <span class="tcb-label">课程</span>
                         <span class="tcb-value">${escapeHtml(courses)}</span>
-                    </div>
+                    </div>` : ''}
+                    ${achievements ? `<div class="tcb-field">
+                        <span class="tcb-label">科研成果</span>
+                        <span class="tcb-value tcb-achievements">${escapeHtml(achievements)}</span>
+                    </div>` : ''}
                     ${email ? `<div class="tcb-field">
                         <span class="tcb-label">邮箱</span>
                         <span class="tcb-value tcb-email">${escapeHtml(email)}</span>
