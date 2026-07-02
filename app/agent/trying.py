@@ -617,12 +617,13 @@ def recommend_node(state: State):
         user_input = state.get("user_input", "")
         is_refresh = any(kw in user_input for kw in ["换一批", "换几个", "换一些", "换导师", "换推荐", "换人", "换"])
 
-        # 3. 从 session 中获取已推荐的导师索引
-        from app.profile_db import get_recommend_offset, set_recommend_offset
+        # 3. 从 session 中获取已推荐的导师索引（兼容旧数据库）
+        offset = 0
         try:
+            from app.profile_db import get_recommend_offset, set_recommend_offset
             offset = get_recommend_offset(session_id)
         except Exception:
-            offset = 0
+            pass
 
         if is_refresh:
             offset += 6  # 跳过上一批
@@ -643,11 +644,12 @@ def recommend_node(state: State):
                     teachers.append(t)
             offset = 0
 
-        # 保存新的 offset
+        # 保存新的 offset（兼容旧数据库）
         try:
+            from app.profile_db import set_recommend_offset
             set_recommend_offset(session_id, offset)
         except Exception:
-            pass  # 兼容旧数据库
+            pass
 
         # 5. 构建显示列表
         teacher_list = []
@@ -664,7 +666,6 @@ def recommend_node(state: State):
         teacher_text = "\n".join(teacher_list)
 
         # 6. 生成简短推荐说明（不用 LLM，避免超时）
-        # 根据用户画像生成模板化说明
         interest_names = [NAME_MAP.get(k, k) for k in profile.get("interest", {}).keys()]
         goal_names = [NAME_MAP.get(k, k) for k in profile.get("goal", {}).keys()]
         interest_text = "、".join(interest_names) if interest_names else "暂无"
@@ -692,7 +693,7 @@ def recommend_node(state: State):
         return {
             "response": final_reply,
             "messages": messages,
-            "teachers": teacher_json  # 新增：导师 JSON 数据
+            "teachers": teacher_json
         }
     except Exception as e:
         # 兜底：如果推荐出错，返回友好提示
