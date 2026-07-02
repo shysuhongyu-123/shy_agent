@@ -347,6 +347,12 @@ def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "de
 
     scored_teachers.sort(key=lambda x: x["score"], reverse=True)
 
+    # 如果画像为空（没有匹配到任何导师），返回所有导师（按默认顺序）
+    if not scored_teachers:
+        for teacher in teachers:
+            teacher["score"] = "暂无画像"
+            scored_teachers.append(teacher)
+
     # 缓存评分结果（前30个）
     cache_teacher_scores(session_id, scored_teachers[:30])
 
