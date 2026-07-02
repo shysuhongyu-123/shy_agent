@@ -124,6 +124,34 @@ ALL_TEACHERS = load_all_teachers()
 
 
 def intent_node(state: State):
+    user_input = state['user_input']
+    
+    # ====== 关键词快速匹配（优先级最高，不经过 LLM）======
+    # 推荐导师关键词
+    recommend_keywords = ["推荐导师", "推荐老师", "推荐", "换一批", "换几个", "换一些", "换导师", "换推荐", "换人"]
+    if any(kw in user_input for kw in recommend_keywords):
+        logger.info("意图识别(关键词): recommend")
+        return {"intent": "recommend"}
+    
+    # 重置画像关键词
+    reset_keywords = ["重置画像", "清空画像", "重置我的画像", "清空我的画像", "重新开始", "删除画像"]
+    if any(kw in user_input for kw in reset_keywords):
+        logger.info("意图识别(关键词): reset_profile")
+        return {"intent": "reset_profile"}
+    
+    # 查看画像关键词
+    profile_keywords = ["查看画像", "我的画像", "看看我的兴趣", "当前画像", "查看用户画像", "查看我的画像"]
+    if any(kw in user_input for kw in profile_keywords):
+        logger.info("意图识别(关键词): show_profile")
+        return {"intent": "show_profile"}
+    
+    # 探索方向关键词
+    explore_keywords = ["不知道喜欢什么", "不知道选什么", "介绍方向", "有哪些方向", "我不确定", "帮我看看", "迷茫"]
+    if any(kw in user_input for kw in explore_keywords):
+        logger.info("意图识别(关键词): explore")
+        return {"intent": "explore"}
+    
+    # ====== 以上关键词都不匹配，才走 LLM 判断 ======
     # 构建对话历史上下文
     history_context = ""
     messages = state.get("messages", [])
@@ -159,14 +187,14 @@ def intent_node(state: State):
     - 如果用户只是提到某个方向名称但没有表达个人偏好（如"网络安全方向"、"机器人方向"），不应视为 update_profile
 
     {history_context}
-    用户输入：{state['user_input']}
+    用户输入：{user_input}
 
     只返回一个词，不要解释。"""
     response = llm.invoke(prompt)
     intent = response.content.strip().lower()
     if intent not in ("show_profile", "update_profile", "recommend", "chat", "explore", "reset_profile"):
         intent = "chat"
-    logger.info("意图识别: %s", intent)
+    logger.info("意图识别(LLM): %s", intent)
     return {"intent": intent}
 
 
