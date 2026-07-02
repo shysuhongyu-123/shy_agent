@@ -158,16 +158,20 @@ def chat():
     session_id = get_session_id()
     logger.info("聊天请求: session=%s, message=%s", session_id, user_input[:50])
 
-    # 先检查缓存
-    cached = get_cached_llm_response(session_id, user_input)
-    if cached:
-        logger.info("聊天缓存命中: session=%s", session_id)
-        # 更新会话历史
-        history = sessions.get(session_id, [])
-        history.append({"role": "user", "content": user_input})
-        history.append({"role": "assistant", "content": cached})
-        sessions[session_id] = history
-        return jsonify({"reply": cached})
+    # 先检查缓存（推荐导师请求不走缓存，确保每次都能获取最新的 teachers 数据）
+    recommend_keywords = ["推荐导师", "推荐老师", "推荐", "换一批", "换几个", "换一些", "换导师", "换推荐", "换人"]
+    is_recommend_request = any(kw in user_input for kw in recommend_keywords)
+    
+    if not is_recommend_request:
+        cached = get_cached_llm_response(session_id, user_input)
+        if cached:
+            logger.info("聊天缓存命中: session=%s", session_id)
+            # 更新会话历史
+            history = sessions.get(session_id, [])
+            history.append({"role": "user", "content": user_input})
+            history.append({"role": "assistant", "content": cached})
+            sessions[session_id] = history
+            return jsonify({"reply": cached})
 
     # 获取该会话的历史消息（转换为 LangChain 消息格式）
     history = sessions.get(session_id, [])

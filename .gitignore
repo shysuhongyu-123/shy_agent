@@ -11,7 +11,6 @@ __pycache__/
 *.db
 
 # 日志文件
-logs/
 *.log
 
 # IDE 配置
