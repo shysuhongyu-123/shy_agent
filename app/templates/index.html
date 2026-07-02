@@ -300,7 +300,7 @@ function renderTeacherCards(teachers) {
         let title = Array.isArray(t.title) ? t.title.join('、') : (t.title || '');
         let supervisor_type = t.supervisor_type || '';
         let office = t.office || '';
-        let achievements = Array.isArray(t.achievements) ? t.achievements.slice(0, 3).join('；') : (t.achievements || '');
+        let achievements = Array.isArray(t.achievements) ? t.achievements.join('；') : (t.achievements || '');
         html += `
             <div class="teacher-card-bubble">
                 <div class="tcb-header">
@@ -333,7 +333,7 @@ function renderTeacherCards(teachers) {
                     </div>` : ''}
                     ${achievements ? `<div class="tcb-field">
                         <span class="tcb-label">科研成果</span>
-                        <span class="tcb-value tcb-achievements">${escapeHtml(achievements)}</span>
+                        <span class="tcb-value tcb-achievements" onclick="this.classList.toggle('expanded')">${escapeHtml(achievements)}</span>
                     </div>` : ''}
                     ${email ? `<div class="tcb-field">
                         <span class="tcb-label">邮箱</span>
