@@ -866,12 +866,24 @@ def chat_node(state: State):
     session_id = state.get("session_id", "default")
     profile = load_profile(session_id)
 
-    # 构建导师信息摘要（限制前15个，避免prompt过大导致OOM）
+    # 构建导师信息摘要（全部114位导师，包含完整字段）
     teacher_summary = ""
-    for t in ALL_TEACHERS[:15]:
+    for t in ALL_TEACHERS:
         research = "、".join(t.get("research", [])) or "暂无"
         courses = "、".join(t.get("courses", [])) or "暂无"
-        teacher_summary += f"- {t['name']}：研究方向【{research}】，课程【{courses}】\n"
+        title = "、".join(t.get("title", [])) or "暂无"
+        supervisor_type = t.get("supervisor_type", "") or ""
+        office = t.get("office", "") or ""
+        achievements_count = len(t.get("achievements", []))
+        teacher_summary += f"- {t['name']}"
+        if supervisor_type:
+            teacher_summary += f"（{supervisor_type}）"
+        teacher_summary += f"：职称【{title}】，研究方向【{research}】，课程【{courses}】"
+        if office:
+            teacher_summary += f"，办公地点【{office}】"
+        if achievements_count > 0:
+            teacher_summary += f"，科研成果{achievements_count}条"
+        teacher_summary += "\n"
 
     # 构建用户画像摘要
     interests = get_sorted_profile(profile.get("interest", {}))
