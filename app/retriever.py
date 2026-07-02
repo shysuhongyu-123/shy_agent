@@ -274,7 +274,13 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
     """
     # ========== 第一部分：研究方向匹配 ==========
     research_score = 0
-    text = " ".join(teacher.get("research", []) + teacher.get("courses", []))
+    # 将研究方向、课程、科研成果合并为匹配文本
+    text_parts = teacher.get("research", []) + teacher.get("courses", [])
+    # 科研成果是字符串列表，直接加入
+    achievements = teacher.get("achievements", [])
+    if achievements:
+        text_parts.extend(achievements)
+    text = " ".join(text_parts)
 
     # 兴趣权重
     for profile_tag, info in user_profile.get("interest", {}).items():
