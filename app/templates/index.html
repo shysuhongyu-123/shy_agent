@@ -21,16 +21,16 @@
         </div>
         <div class="sidebar-info">
             <div class="info-card">
-                <i class="fas fa-lightbulb"></i>
-                <span>告诉我你的兴趣方向</span>
+                <i class="fas fa-comment"></i>
+                <span>告诉我你的兴趣和目标</span>
             </div>
             <div class="info-card">
-                <i class="fas fa-bullseye"></i>
-                <span>设定你的学业/职业目标</span>
+                <i class="fas fa-id-card"></i>
+                <span>我会记录你的兴趣档案</span>
             </div>
             <div class="info-card">
                 <i class="fas fa-user-graduate"></i>
-                <span>获取匹配导师推荐</span>
+                <span>按匹配度推荐导师</span>
             </div>
         </div>
         <div class="sidebar-footer">
@@ -39,8 +39,7 @@
                 <div class="tip-text">
                     <strong>试试这样说：</strong>
                     <p>"我喜欢机器人"</p>
-                    <p>"我想就业"</p>
-                    <p>"查看我的画像"</p>
+                    <p>"我想考研"</p>
                     <p>"推荐导师"</p>
                 </div>
             </div>
@@ -57,28 +56,28 @@
                 <span>Mario</span>
             </div>
             <div class="header-right">
-                <!-- 查看画像按钮 -->
+                <!-- 我的兴趣档案按钮 -->
                 <div class="profile-badge" id="profileBadge" onclick="toggleProfile()">
                     <i class="fas fa-id-card"></i>
-                    <span>查看画像</span>
+                    <span>我的兴趣档案</span>
                     <i class="fas fa-chevron-down badge-arrow"></i>
                 </div>
-                <!-- 画像浮窗 -->
+                <!-- 兴趣档案浮窗 -->
                 <div class="profile-popup" id="profilePopup">
                     <div class="profile-popup-header">
                         <i class="fas fa-id-card"></i>
-                        <span>我的画像</span>
+                        <span>我的兴趣档案</span>
                         <button class="profile-popup-close" onclick="toggleProfile()">&times;</button>
                     </div>
                     <div class="profile-popup-body" id="profilePopupBody">
-                        <div class="profile-loading">点击下方按钮查看画像</div>
+                        <div class="profile-loading">点击下方按钮查看兴趣档案</div>
                     </div>
                     <div class="profile-popup-footer">
                         <button class="profile-btn profile-btn-view" onclick="viewProfile()">
-                            <i class="fas fa-sync-alt"></i> 刷新画像
+                            <i class="fas fa-sync-alt"></i> 刷新档案
                         </button>
                         <button class="profile-btn profile-btn-reset" onclick="resetProfile()">
-                            <i class="fas fa-trash-alt"></i> 重置画像
+                            <i class="fas fa-trash-alt"></i> 清空档案
                         </button>
                     </div>
                 </div>
@@ -127,14 +126,14 @@
                 </button>
             </div>
             <div class="input-wrapper">
-                <textarea id="message" placeholder="说说你的想法，比如：我喜欢机器人..." rows="1"></textarea>
+                <textarea id="message" placeholder="说说你的兴趣和目标，比如：我喜欢机器人..." rows="1"></textarea>
                 <button id="sendBtn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
             <div class="input-tips">
-                <span class="tip" onclick="quickFill('我不知道喜欢什么')">探索方向</span>
-                <span class="tip" onclick="quickFill('查看我的画像')">查看画像</span>
+                <span class="tip" onclick="quickFill('我不知道喜欢什么')">我不确定方向</span>
+                <span class="tip" onclick="quickFill('查看我的画像')">我的兴趣档案</span>
             </div>
         </div>
     </main>
@@ -222,7 +221,7 @@ window.onload = async function() {
 };
 
 // ============================================================
-// 画像浮窗
+// 兴趣档案浮窗
 // ============================================================
 function toggleProfile() {
     document.getElementById("profileBadge").classList.toggle("active");
@@ -251,7 +250,7 @@ async function viewProfile() {
 }
 
 async function resetProfile() {
-    if (!confirm("确定要清空所有画像信息吗？")) return;
+    if (!confirm("确定要清空所有兴趣档案信息吗？")) return;
     let body = document.getElementById("profilePopupBody");
     body.innerHTML = '<div class="profile-loading"><i class="fas fa-spinner fa-spin"></i> 重置中...</div>';
     try {

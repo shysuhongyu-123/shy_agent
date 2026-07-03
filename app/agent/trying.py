@@ -740,7 +740,7 @@ def recommend_node(state: State):
 
 
 def build_welcome_prompt(profile):
-    """根据画像状态生成引导性欢迎词"""
+    """根据画像状态生成引导性欢迎词（简短、分点、一目了然）"""
     interests = profile.get("interest", {})
     goals = profile.get("goal", {})
     history = profile.get("history", [])
@@ -749,40 +749,34 @@ def build_welcome_prompt(profile):
     has_goals = len(goals) > 0
     has_history = len(history) > 0
 
-    # 构建兴趣列表供引导
-    interest_names = [NAME_MAP.get(k, k) for k in INTEREST_MAP.keys()]
-    goal_names = [NAME_MAP.get(k, k) for k in GOAL_MAP.keys()]
-
     if not has_interests and not has_goals:
-        # 新用户，完全无画像
-        prompt = f"""你是 Mario，广州大学机械与电气工程学院的导师推荐助手。你的名字来自超级马里奥，因为你像马里奥一样乐于助人、充满活力。
-这是用户第一次与你对话，用户还没有任何画像信息。
-请用一段活泼轻松的欢迎语（约80-120字）引导用户介绍自己，包括：
-1. 自我介绍：你是 Mario，专门帮大家挑导师
-2. 引导用户说说自己的兴趣方向（举2-3个例子即可，如机器人、人工智能、嵌入式）
-3. 引导用户说说自己的未来目标（举1-2个例子即可，如就业、考研）
-4. 告诉用户可以随时说"查看我的画像"或"推荐导师"
-要求：语气活泼轻松，像朋友在聊天，不要用 emoji，不要用颜文字，不要用感叹号堆砌。不要罗列太多方向，保持简洁自然。"""
+        # 新用户，完全无画像 — 极简短欢迎
+        prompt = """你是 Mario，广州大学机械与电气工程学院的导师推荐助手。
+这是用户第一次使用，请用一段非常简短的话（约40-60字）介绍自己并引导用户：
+1. 自我介绍：我是 Mario，帮你挑导师
+2. 告诉用户：说说你的兴趣和目标，我会按匹配度推荐导师
+3. 举2个例子：比如"我喜欢机器人"、"我想考研"
+要求：非常简短，像朋友打招呼一样自然，不要用 emoji，不要用颜文字，不要用感叹号堆砌。"""
     elif has_interests and not has_goals:
         # 有兴趣但无目标
         interest_summary = "、".join([NAME_MAP.get(k, k) for k in interests.keys()])
         prompt = f"""你是 Mario，广州大学机械与电气工程学院的导师推荐助手。
 用户已有兴趣方向：{interest_summary}，但还没有设定目标。
-请用一段活泼轻松的话（约80-120字）：
+请用一段非常简短的话（约40-60字）：
 1. 肯定用户已有的兴趣
-2. 引导用户说说未来的目标（如：{", ".join(goal_names)}）
-3. 告诉用户可以随时说"查看我的画像"或"推荐导师"
-要求：语气活泼轻松，像朋友在聊天，不要用 emoji，不要用颜文字。"""
+2. 引导用户说说未来的目标（如就业、考研、读博）
+3. 告诉用户可以点击"推荐导师"查看匹配结果
+要求：非常简短，像朋友聊天一样自然，不要用 emoji，不要用颜文字。"""
     elif not has_interests and has_goals:
         # 有目标但无兴趣
         goal_summary = "、".join([NAME_MAP.get(k, k) for k in goals.keys()])
         prompt = f"""你是 Mario，广州大学机械与电气工程学院的导师推荐助手。
 用户已有目标：{goal_summary}，但还没有记录兴趣方向。
-请用一段活泼轻松的话（约80-120字）：
+请用一段非常简短的话（约40-60字）：
 1. 肯定用户已有的目标
-2. 引导用户说说感兴趣的研究方向（如：{", ".join(interest_names)}）
-3. 告诉用户可以随时说"查看我的画像"或"推荐导师"
-要求：语气活泼轻松，像朋友在聊天，不要用 emoji，不要用颜文字。"""
+2. 引导用户说说感兴趣的研究方向（如机器人、人工智能、嵌入式）
+3. 告诉用户可以点击"推荐导师"查看匹配结果
+要求：非常简短，像朋友聊天一样自然，不要用 emoji，不要用颜文字。"""
     else:
         # 已有完整画像
         interest_summary = "、".join([NAME_MAP.get(k, k) for k in interests.keys()])
@@ -791,11 +785,10 @@ def build_welcome_prompt(profile):
 用户已有画像信息：
 - 兴趣方向：{interest_summary}
 - 目标：{goal_summary}
-请用一段活泼轻松的话（约60-100字）：
+请用一段非常简短的话（约30-50字）：
 1. 简要回顾用户的画像
-2. 询问是否需要推荐导师，或者继续更新画像
-3. 告诉用户可以随时说"查看我的画像"或"推荐导师"
-要求：语气活泼轻松，像朋友在聊天，不要用 emoji，不要用颜文字。"""
+2. 询问是否需要推荐导师
+要求：非常简短，像朋友聊天一样自然，不要用 emoji，不要用颜文字。"""
     return prompt
 
 
