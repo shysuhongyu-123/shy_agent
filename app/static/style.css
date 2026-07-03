@@ -130,21 +130,21 @@ body {
 /* 问号箱 - 浮动装饰 */
 .mario-block {
     position: absolute;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     background: var(--mario-yellow);
     border: 2px solid #d4a800;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 900;
     color: #d4a800;
     animation: floatBlock 3s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.15;
+    opacity: 0.6;
 }
 
 .mario-block::after {
@@ -194,15 +194,15 @@ body {
 /* 金币旋转动画 */
 .coin-sparkle {
     position: absolute;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #fff7a0, var(--mario-yellow));
-    box-shadow: 0 0 6px rgba(251, 208, 0, 0.4);
+    box-shadow: 0 0 8px rgba(251, 208, 0, 0.5);
     animation: coinSpin 2s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.12;
+    opacity: 0.55;
 }
 
 .coin-sparkle:nth-child(4) {
@@ -231,15 +231,15 @@ body {
 /* 蘑菇装饰 */
 .mario-mushroom {
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50% 50% 40% 40%;
     background: radial-gradient(circle at 40% 35%, #ff6b6b, var(--mario-red));
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     animation: mushroomBounce 4s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.1;
+    opacity: 0.5;
 }
 
 .mario-mushroom::after {
