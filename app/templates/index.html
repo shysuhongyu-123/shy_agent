@@ -505,8 +505,8 @@ async function sendMessage() {
 
         // 检查是否有导师推荐数据
         if (data.teachers && Array.isArray(data.teachers) && data.teachers.length > 0) {
-            // 有导师推荐数据，弹出浮窗
-            addBotMessage("为您找到以下匹配导师：");
+            // 有导师推荐数据：聊天框显示简短提示，浮窗显示导师卡片
+            addBotMessage(data.reply);
             openRecommend(data.teachers);
         } else {
             // 普通回复，打字机效果

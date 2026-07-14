@@ -762,8 +762,8 @@ def recommend_node(state: State):
                 "match_reason": t.get('match_reason', {})
             })
 
-        # 8. 拼接最终回复
-        final_reply = f"为您找到以下匹配导师：\n\n{teacher_text}\n\n推荐分析：{analysis}\n\n---\n不满意？可以告诉我「换一批」或继续点击推荐按钮，我会为你推荐其他导师。"
+        # 8. 拼接最终回复（简短提示，导师详情在浮窗中展示）
+        final_reply = f"为您找到 {len(teachers)} 位匹配导师，点击下方卡片查看详情。不满意可以告诉我「换一批」哦！"
         messages = state.get("messages", []) + [
             HumanMessage(content=state["user_input"]),
             AIMessage(content=final_reply)
