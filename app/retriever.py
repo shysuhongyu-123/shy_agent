@@ -265,46 +265,106 @@ def _get_llm():
     return _llm
 
 
-def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
+def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> dict:
     """
     综合评分 = 研究方向匹配分 × 0.7 + 课程-目标匹配分 × 0.3
 
     纯算法匹配，不调用 LLM，避免 Render 超时。
     预定义标签用关键词匹配，自由文本标签用文本包含匹配。
+    
+    返回带匹配原因的 dict：
+    {
+        "score": float,
+        "matched_interests": [{"tag": "机器人", "weight": 0.9, "keywords": ["机器人", "机器人控制"]}],
+        "matched_goals": [{"tag": "考研", "weight": 0.8, "keywords": ["自动控制原理"]}],
+        "research_match": float,  # 0~1 归一化
+        "course_match": float     # 0~1 归一化
+    }
     """
     # ========== 第一部分：研究方向匹配 ==========
     research_score = 0
     # 将研究方向、课程、科研成果合并为匹配文本
     text_parts = teacher.get("research", []) + teacher.get("courses", [])
-    # 科研成果是字符串列表，直接加入
     achievements = teacher.get("achievements", [])
     if achievements:
         text_parts.extend(achievements)
     text = " ".join(text_parts)
 
-    # 兴趣权重
+    matched_interests = []
+    matched_goals = []
+    max_possible_score = 0
+
+    # 兴趣匹配
     for profile_tag, info in user_profile.get("interest", {}).items():
         weight = info.get("composite_score", 0)
+        if weight <= 0:
+            continue
+        max_possible_score += weight
+        
+        tag_name = profile_tag
+        # 尝试翻译为中文
+        from app.agent.trying import NAME_MAP
+        if profile_tag in NAME_MAP:
+            tag_name = NAME_MAP[profile_tag]
+        
+        matched_kws = []
         if profile_tag in KEYWORD_MAP:
-            # 预定义标签：关键词匹配
             keywords = KEYWORD_MAP.get(profile_tag, [])
-            if any(kw in text for kw in keywords):
+            for kw in keywords:
+                if kw in text:
+                    matched_kws.append(kw)
+            if matched_kws:
                 research_score += weight
+                matched_interests.append({
+                    "tag": tag_name,
+                    "weight": round(weight, 2),
+                    "keywords": matched_kws[:3]  # 最多3个关键词
+                })
         else:
-            # 自由文本标签：文本包含匹配
             if profile_tag in text:
                 research_score += weight
+                matched_interests.append({
+                    "tag": tag_name,
+                    "weight": round(weight, 2),
+                    "keywords": [profile_tag]
+                })
 
-    # 目标权重
+    # 目标匹配
     for profile_tag, info in user_profile.get("goal", {}).items():
         weight = info.get("composite_score", 0)
+        if weight <= 0:
+            continue
+        max_possible_score += weight
+        
+        tag_name = profile_tag
+        from app.agent.trying import NAME_MAP
+        if profile_tag in NAME_MAP:
+            tag_name = NAME_MAP[profile_tag]
+        
+        matched_kws = []
         if profile_tag in KEYWORD_MAP:
             keywords = KEYWORD_MAP.get(profile_tag, [])
-            if any(kw in text for kw in keywords):
+            for kw in keywords:
+                if kw in text:
+                    matched_kws.append(kw)
+            if matched_kws:
                 research_score += weight
+                matched_goals.append({
+                    "tag": tag_name,
+                    "weight": round(weight, 2),
+                    "keywords": matched_kws[:3]
+                })
         else:
             if profile_tag in text:
                 research_score += weight
+                matched_goals.append({
+                    "tag": tag_name,
+                    "weight": round(weight, 2),
+                    "keywords": [profile_tag]
+                })
+
+    # 归一化研究方向匹配度
+    research_match = round(min(research_score / max(max_possible_score, 1), 1.0), 2)
 
     # ========== 第二部分：课程-目标匹配 ==========
     courses = teacher.get("courses", [])
@@ -323,10 +383,18 @@ def calculate_teacher_score(teacher: Dict, user_profile: Dict) -> float:
     else:
         course_goal_score = 0
 
+    course_match = round(min(course_goal_score, 1.0), 2)
+
     # ========== 综合 ==========
     final_score = research_score * 0.7 + course_goal_score * 2.0 * 0.3
 
-    return round(final_score, 2)
+    return {
+        "score": round(final_score, 2),
+        "matched_interests": matched_interests,
+        "matched_goals": matched_goals,
+        "research_match": research_match,
+        "course_match": course_match
+    }
 
 
 def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "default") -> List[Dict]:
@@ -346,9 +414,15 @@ def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "de
 
     scored_teachers = []
     for teacher in teachers:
-        score = calculate_teacher_score(teacher, user_profile)
-        if score > 0:
-            teacher["score"] = score
+        result = calculate_teacher_score(teacher, user_profile)
+        if result["score"] > 0:
+            teacher["score"] = result["score"]
+            teacher["match_reason"] = {
+                "matched_interests": result["matched_interests"],
+                "matched_goals": result["matched_goals"],
+                "research_match": result["research_match"],
+                "course_match": result["course_match"]
+            }
             scored_teachers.append(teacher)
 
     scored_teachers.sort(key=lambda x: x["score"], reverse=True)

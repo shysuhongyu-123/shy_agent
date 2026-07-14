@@ -308,6 +308,27 @@ function toggleAchievements(el) {
     }
 }
 
+function renderMatchReason(reason) {
+    if (!reason || (!reason.matched_interests || reason.matched_interests.length === 0) && (!reason.matched_goals || reason.matched_goals.length === 0)) {
+        return '';
+    }
+    let items = [];
+    if (reason.matched_interests && reason.matched_interests.length > 0) {
+        reason.matched_interests.forEach(function(m) {
+            let kws = m.keywords ? m.keywords.join('、') : '';
+            items.push(`<div class="match-item match-interest"><i class="fas fa-check-circle"></i><span>兴趣匹配：<strong>${escapeHtml(m.tag)}</strong>${kws ? '<span class="match-kw">' + escapeHtml(kws) + '</span>' : ''}</span></div>`);
+        });
+    }
+    if (reason.matched_goals && reason.matched_goals.length > 0) {
+        reason.matched_goals.forEach(function(m) {
+            let kws = m.keywords ? m.keywords.join('、') : '';
+            items.push(`<div class="match-item match-goal"><i class="fas fa-bullseye"></i><span>目标匹配：<strong>${escapeHtml(m.tag)}</strong>${kws ? '<span class="match-kw">' + escapeHtml(kws) + '</span>' : ''}</span></div>`);
+        });
+    }
+    if (items.length === 0) return '';
+    return `<div class="match-reason-section"><div class="match-reason-title"><i class="fas fa-star"></i> 匹配原因</div>${items.join('')}</div>`;
+}
+
 function renderTeacherCards(teachers) {
     let body = document.getElementById("recommendPopupBody");
     if (!teachers || teachers.length === 0) {
@@ -325,6 +346,7 @@ function renderTeacherCards(teachers) {
         let supervisor_type = t.supervisor_type || '';
         let office = t.office || '';
         let achievements = Array.isArray(t.achievements) ? t.achievements.join('；') : (t.achievements || '');
+        let matchHtml = renderMatchReason(t.match_reason);
         html += `
             <div class="teacher-card-bubble">
                 <div class="tcb-header">
@@ -335,6 +357,8 @@ function renderTeacherCards(teachers) {
                     </div>
                 </div>
                 <div class="tcb-body">
+                    ${matchHtml}
+                    <div class="tcb-divider"></div>
                     ${title ? `<div class="tcb-field">
                         <span class="tcb-label">职称</span>
                         <span class="tcb-value">${escapeHtml(title)}</span>

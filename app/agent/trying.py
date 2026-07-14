@@ -714,7 +714,8 @@ def recommend_node(state: State):
                 "title": t.get('title', []),
                 "supervisor_type": t.get('supervisor_type', ''),
                 "office": t.get('office', ''),
-                "achievements": t.get('achievements', [])
+                "achievements": t.get('achievements', []),
+                "match_reason": t.get('match_reason', {})
             })
 
         # 8. 拼接最终回复
@@ -755,7 +756,7 @@ def build_welcome_prompt(profile):
 
 这是用户第一次使用，请用一段非常简短的话（约40-60字）打招呼：
 1. 用马里奥的语气自我介绍：比如"嘿！我就是传说中的Mario！"、"哟！水管工Mario来啦！"之类的
-2. 贱兮兮地催用户说说兴趣和目标，比如"别愣着啊，快告诉我你喜欢啥"、"赶紧的，把你的小爱好都交代出来"
+2. 贱兮兮地催用户说说兴趣和目标，比如"别愣着啊，快告诉我你喜欢啥"、"赶紧的，把你的爱好都交代出来"
 3. 举2个例子：比如"喜欢机器人？想考研？统统告诉我！"
 要求：语气要像游戏里那个跳来跳去的水管工——嘴贫、自信、带点欠揍的亲切感。非常简短，40-60字，不要用 emoji。"""
     elif has_interests and not has_goals:
@@ -765,7 +766,7 @@ def build_welcome_prompt(profile):
 
 用户已有兴趣方向：{interest_summary}，但还没有设定目标。
 请用一段非常简短的话（约40-60字）：
-1. 用马里奥的语气肯定用户的兴趣，比如"哟，眼光不错嘛！"、"可以啊，有点东西！"
+1. 用马里奥的语气肯定用户的兴趣，比如"哟眼光不错嘛！"、"可以啊！"
 2. 贱兮兮地催用户说说目标，比如"光有兴趣可不够啊，未来想干啥？考研？就业？说出来让Mario帮你参谋参谋"
 3. 告诉用户可以点"推荐导师"先看看
 要求：语气要像马里奥——嘴贫但热心，简短40-60字，不要用 emoji。"""
