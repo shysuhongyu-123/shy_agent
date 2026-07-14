@@ -431,6 +431,7 @@ def recommend_teachers(user_profile: Dict, top_n: int = 5, session_id: str = "de
     if not scored_teachers:
         for teacher in teachers:
             teacher["score"] = "暂无画像"
+            teacher["match_reason"] = {}
             scored_teachers.append(teacher)
 
     # 缓存评分结果（前30个）

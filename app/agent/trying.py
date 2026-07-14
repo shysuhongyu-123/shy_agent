@@ -7,7 +7,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
 import json
 
-from app.retriever import recommend_teachers
+from app.retriever import recommend_teachers, calculate_teacher_score, load_teachers
 from app.profile_db import (
     load_profile as db_load_profile,
     save_profile as db_save_profile,
@@ -15,7 +15,7 @@ from app.profile_db import (
     check_recent_history as db_check_recent_history
 )
 from app.logger import logger
-from app.cache import invalidate_teacher_scores, cache
+from app.cache import invalidate_teacher_scores, cache, get_cached_teacher_scores, cache_teacher_scores
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -617,6 +617,50 @@ def show_profile_summary_node(state: State):
     }
 
 
+def get_all_scored_teachers(profile, session_id="default"):
+    """
+    获取所有导师的评分结果（带缓存）。
+    返回完整排序列表（不截断），供 recommend_node 分页使用。
+    """
+    # 尝试从缓存获取完整列表
+    cached = get_cached_teacher_scores(session_id)
+    if cached is not None and len(cached) > 0:
+        logger.info("导师评分缓存命中: session=%s, 数量=%d", session_id, len(cached))
+        return cached
+
+    # 缓存未命中，重新计算
+    all_teachers = load_all_teachers()
+    if not all_teachers:
+        return []
+
+    scored_teachers = []
+    for teacher in all_teachers:
+        result = calculate_teacher_score(teacher, profile)
+        if result["score"] > 0:
+            teacher["score"] = result["score"]
+            teacher["match_reason"] = {
+                "matched_interests": result["matched_interests"],
+                "matched_goals": result["matched_goals"],
+                "research_match": result["research_match"],
+                "course_match": result["course_match"]
+            }
+            scored_teachers.append(teacher)
+
+    scored_teachers.sort(key=lambda x: x["score"], reverse=True)
+
+    # 如果画像为空（没有匹配到任何导师），返回所有导师（按默认顺序）
+    if not scored_teachers:
+        for teacher in all_teachers:
+            teacher["score"] = "暂无画像"
+            teacher["match_reason"] = {}
+            scored_teachers.append(teacher)
+
+    # 缓存完整结果
+    cache_teacher_scores(session_id, scored_teachers)
+
+    return scored_teachers
+
+
 def recommend_node(state: State):
     """推荐导师，每次返回6个，支持换一批"""
     session_id = state.get("session_id", "default")
@@ -629,8 +673,8 @@ def recommend_node(state: State):
                      list(profile.get('interest', {}).keys()),
                      list(profile.get('goal', {}).keys()))
 
-        # 1. 用推荐算法对所有导师打分排序，取前30个（带缓存）
-        all_scored = recommend_teachers(profile, top_n=30, session_id=session_id)
+        # 1. 获取所有导师的评分结果（完整排序列表）
+        all_scored = get_all_scored_teachers(profile, session_id)
         logger.info("推荐导师: 候选数量=%d", len(all_scored))
 
         if not all_scored:
@@ -644,9 +688,9 @@ def recommend_node(state: State):
 
         # 2. 判断是否是"换一批"请求
         user_input = state.get("user_input", "")
-        is_refresh = any(kw in user_input for kw in ["换一批", "换几个", "换一些", "换导师", "换推荐", "换人", "换"])
+        is_refresh = any(kw in user_input for kw in ["换一批", "换几个", "换一些", "换导师", "换推荐", "换人"])
 
-        # 3. 从 session 中获取已推荐的导师索引（兼容旧数据库）
+        # 3. 从 session 中获取已推荐的导师索引
         offset = 0
         try:
             from app.profile_db import get_recommend_offset, set_recommend_offset
@@ -673,7 +717,7 @@ def recommend_node(state: State):
                     teachers.append(t)
             offset = 0
 
-        # 保存新的 offset（兼容旧数据库）
+        # 保存新的 offset
         try:
             from app.profile_db import set_recommend_offset
             set_recommend_offset(session_id, offset)
@@ -694,7 +738,7 @@ def recommend_node(state: State):
             )
         teacher_text = "\n".join(teacher_list)
 
-        # 6. 生成简短推荐说明（不用 LLM，避免超时）
+        # 6. 生成简短推荐说明
         interest_names = [NAME_MAP.get(k, k) for k in profile.get("interest", {}).keys()]
         goal_names = [NAME_MAP.get(k, k) for k in profile.get("goal", {}).keys()]
         interest_text = "、".join(interest_names) if interest_names else "暂无"
