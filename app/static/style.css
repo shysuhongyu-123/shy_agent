@@ -702,11 +702,6 @@ body {
     position: relative;
 }
 
-/* 气泡内的 teacher-card 不受 white-space: pre-wrap 影响 */
-.bubble .teacher-card {
-    white-space: normal;
-}
-
 .message.user .bubble {
     background: var(--bubble-user);
     color: white;
@@ -723,110 +718,144 @@ body {
 }
 
 /* ============================================================
-   导师推荐卡片样式
+   推荐导师浮窗
    ============================================================ */
-.teacher-card {
-    background: linear-gradient(135deg, #ffffff, #f8fafc);
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 16px 18px;
-    margin: 8px 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    transition: all 0.25s ease;
-    position: relative;
-    overflow: hidden;
-}
 
-.teacher-card::before {
-    content: '';
-    position: absolute;
+/* 遮罩层 */
+.recommend-overlay {
+    display: none;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(180deg, #2563eb, #06b6d4);
-    border-radius: 4px 0 0 4px;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fadeInOverlay 0.2s ease;
 }
 
-.teacher-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
-    transform: translateY(-2px);
-    border-color: #bfdbfe;
+.recommend-overlay.show {
+    display: block;
 }
 
-.teacher-number {
-    font-size: 14px;
-    font-weight: 700;
-    color: #2563eb;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #e2e8f0;
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 浮窗主体 */
+.recommend-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    max-width: 92vw;
+    max-height: 85vh;
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    flex-direction: column;
+    animation: popIn 0.3s ease;
+}
+
+.recommend-popup.show {
+    display: flex;
+}
+
+@keyframes popIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.recommend-popup-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-}
-
-.teacher-number::before {
-    content: '\f19d';
-    font-family: 'Font Awesome 6 Free';
-    font-weight: 900;
-    font-size: 13px;
-    color: #2563eb;
-}
-
-.teacher-field {
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-    margin-bottom: 5px;
-    font-size: 13px;
-    line-height: 1.6;
-    padding: 2px 0;
-}
-
-.teacher-field:last-child {
-    margin-bottom: 0;
-}
-
-.field-label {
-    color: #64748b;
-    font-weight: 500;
-    flex-shrink: 0;
-    min-width: 52px;
-    font-size: 12px;
-    background: #f1f5f9;
-    padding: 0 6px;
-    border-radius: 4px;
-    text-align: center;
-    line-height: 1.8;
-}
-
-.field-value {
-    color: #0f172a;
-    word-break: break-word;
-    font-weight: 400;
-}
-
-.match-score {
-    color: #059669;
+    gap: 8px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 16px;
     font-weight: 600;
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: var(--text-primary);
+    flex-shrink: 0;
+    background: #ffffff;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.recommend-popup-header i {
+    color: var(--primary);
+    font-size: 18px;
+}
+
+.recommend-popup-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--text-light);
+    cursor: pointer;
     padding: 0 8px;
-    border-radius: 4px;
-    display: inline-block;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.recommend-popup-close:hover {
+    color: #ef4444;
+}
+
+/* 浮窗内容区域 - 可滚动 */
+.recommend-popup-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px 20px;
+    min-height: 100px;
+    max-height: calc(85vh - 120px);
+    background: #f8fafc;
+}
+
+.recommend-popup-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.recommend-popup-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.recommend-popup-body::-webkit-scrollbar-thumb {
+    background: #c0c4cc;
+    border-radius: 3px;
+}
+
+/* 加载状态 */
+.recommend-loading {
+    text-align: center;
+    color: var(--text-light);
+    padding: 40px 20px;
+    font-size: 15px;
+}
+
+/* 导师卡片网格 */
+.teacher-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
 }
 
 /* ============================================================
-   导师卡片（气泡卡片）
+   导师卡片（白色明亮风格）
    ============================================================ */
 .teacher-card-bubble {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 20px;
-    transition: all 0.3s ease;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 0;
+    transition: all 0.25s ease;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 
 .teacher-card-bubble::before {
@@ -837,224 +866,33 @@ body {
     right: 0;
     height: 3px;
     background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
-    opacity: 0.6;
 }
 
 .teacher-card-bubble:hover {
-    transform: translateY(-2px);
-    border-color: rgba(59, 130, 246, 0.3);
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+    transform: translateY(-3px);
+    border-color: #bfdbfe;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
 }
 
+/* 卡片头部 */
 .tcb-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
+    padding: 14px 16px 10px;
 }
 
 .tcb-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    font-weight: 700;
-    color: white;
-    flex-shrink: 0;
-}
-
-.tcb-name-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.tcb-name {
     font-size: 17px;
-    font-weight: 600;
-    color: #f1f5f9;
-}
-
-.tcb-score {
-    font-size: 13px;
-    color: #fbbf24;
-    background: rgba(251, 191, 36, 0.1);
-    padding: 2px 10px;
-    border-radius: 20px;
-    border: 1px solid rgba(251, 191, 36, 0.2);
-    font-weight: 500;
-}
-
-.tcb-body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.tcb-field {
-    display: flex;
-    gap: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.tcb-label {
-    color: #64748b;
-    flex-shrink: 0;
-    min-width: 60px;
-    font-weight: 500;
-}
-
-.tcb-value {
-    color: #cbd5e1;
-    word-break: break-all;
-}
-
-.tcb-tag {
-    display: inline-block;
-    background: rgba(59, 130, 246, 0.1);
-    color: #60a5fa;
-    padding: 1px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-.tcb-email {
-    color: #60a5fa;
-    font-size: 12px;
-}
-
-.tcb-link a {
-    color: #60a5fa;
-    text-decoration: none;
-    font-size: 12px;
-}
-
-.tcb-link a:hover {
-    text-decoration: underline;
-}
-
-.tcb-achievements {
-    max-height: 40px;
-    overflow: hidden;
-    cursor: pointer;
-    position: relative;
-    transition: max-height 0.3s ease;
-}
-
-.tcb-achievements.expanded {
-    max-height: 500px;
-}
-
-.expand-btn {
-    display: inline-block;
-    color: #60a5fa;
-    font-size: 12px;
-    margin-left: 6px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-/* ============================================================
-   匹配原因样式
-   ============================================================ */
-.match-reason-section {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(139, 92, 246, 0.08));
-    border: 1px solid rgba(59, 130, 246, 0.15);
-    border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 8px;
-}
-
-.match-reason-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #60a5fa;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.match-reason-title i {
-    color: #fbbf24;
-    font-size: 12px;
-}
-
-.match-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    font-size: 12px;
-    line-height: 1.5;
-    padding: 4px 0;
-}
-
-.match-item i {
-    font-size: 12px;
-    margin-top: 2px;
-    flex-shrink: 0;
-}
-
-.match-interest i {
-    color: #34d399;
-}
-
-.match-goal i {
-    color: #fbbf24;
-}
-
-.match-item strong {
-    color: #f1f5f9;
-    font-weight: 600;
-}
-
-.match-kw {
-    display: inline-block;
-    background: rgba(59, 130, 246, 0.12);
-    color: #93c5fd;
-    padding: 1px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    margin-left: 6px;
-}
-
-.tcb-divider {
-    height: 1px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-    margin: 8px 0;
-}
-
-.teacher-card-bubble:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    transform: translateY(-2px);
-    border-color: #bfdbfe;
-}
-
-.tcb-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px 8px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.tcb-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb, #06b6d4);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
     font-weight: 700;
+    color: white;
     flex-shrink: 0;
 }
 
@@ -1064,32 +902,105 @@ body {
     gap: 8px;
     flex: 1;
     min-width: 0;
+    flex-wrap: wrap;
 }
 
 .tcb-name {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: #0f172a;
 }
 
 .tcb-score {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: #059669;
     background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    padding: 1px 8px;
-    border-radius: 10px;
+    padding: 2px 10px;
+    border-radius: 12px;
     white-space: nowrap;
 }
 
+/* 卡片内容 */
 .tcb-body {
-    padding: 8px 14px 12px;
+    padding: 0 16px 14px;
 }
 
+/* 匹配原因 */
+.match-reason-section {
+    background: linear-gradient(135deg, #eff6ff, #f0f0ff);
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+.match-reason-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3b82f6;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.match-reason-title i {
+    color: #f59e0b;
+    font-size: 11px;
+}
+
+.match-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 3px 0;
+    color: #334155;
+}
+
+.match-item i {
+    font-size: 11px;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.match-interest i {
+    color: #10b981;
+}
+
+.match-goal i {
+    color: #f59e0b;
+}
+
+.match-item strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.match-kw {
+    display: inline-block;
+    background: #dbeafe;
+    color: #2563eb;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    margin-left: 4px;
+}
+
+/* 分隔线 */
+.tcb-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 8px 0;
+}
+
+/* 字段行 */
 .tcb-field {
     display: flex;
-    gap: 4px;
-    margin-bottom: 3px;
+    gap: 6px;
+    margin-bottom: 4px;
     font-size: 12px;
     line-height: 1.6;
 }
@@ -1101,20 +1012,34 @@ body {
 .tcb-label {
     color: #94a3b8;
     flex-shrink: 0;
-    min-width: 44px;
+    min-width: 48px;
     font-size: 11px;
+    font-weight: 500;
 }
 
 .tcb-value {
-    color: #475569;
+    color: #334155;
     word-break: break-word;
 }
 
+/* 导师类型标签 */
+.tcb-tag {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1d4ed8;
+    padding: 0 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* 邮箱 */
 .tcb-email {
     color: #2563eb;
     font-size: 11px;
 }
 
+/* 主页链接 */
 .tcb-link a {
     color: #2563eb;
     text-decoration: none;
@@ -1125,33 +1050,23 @@ body {
     text-decoration: underline;
 }
 
-/* 导师类型标签 */
-.tcb-tag {
-    display: inline-block;
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #1d4ed8;
-    padding: 0 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-/* 科研成果 - 可点击展开/收起 */
+/* 科研成果 - 可展开 */
 .tcb-achievements {
     font-size: 11px;
     color: #475569;
     line-height: 1.5;
-    max-height: 48px;
+    max-height: 42px;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
     cursor: pointer;
     position: relative;
     transition: max-height 0.3s ease;
 }
 
-.tcb-achievements .expand-btn {
+.tcb-achievements.expanded {
+    max-height: 300px;
+}
+
+.expand-btn {
     display: block;
     color: #2563eb;
     font-size: 10px;
@@ -1161,92 +1076,42 @@ body {
     user-select: none;
 }
 
-.tcb-achievements.expanded {
-    max-height: 300px;
-    -webkit-line-clamp: unset;
-    display: block;
-}
-
-/* 手机端适配 */
-@media (max-width: 768px) {
-    .recommend-popup {
-        width: 95vw;
-        max-height: 85vh;
-    }
-
-    .teacher-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .recommend-popup-body {
-        padding: 12px 14px;
-    }
-
-    .tcb-header {
-        padding: 10px 12px 6px;
-    }
-
-    .tcb-body {
-        padding: 6px 12px 10px;
-    }
-}
-
-/* ============================================================
-   推荐导师按钮
-   ============================================================ */
-.recommend-bar {
+/* 浮窗底部按钮 */
+.recommend-popup-footer {
     display: flex;
-    justify-content: center;
-    margin-bottom: 10px;
+    gap: 10px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    background: #ffffff;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
-.recommend-btn {
+.recommend-btn-secondary {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 28px;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s ease;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
-    border: none;
-    border-radius: 25px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
     box-shadow: 0 3px 12px rgba(37, 99, 235, 0.25);
-    position: relative;
-    overflow: hidden;
 }
 
-/* 推荐按钮的闪光效果 */
-.recommend-btn::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.recommend-btn:hover::after {
-    opacity: 1;
-}
-
-.recommend-btn:hover {
+.recommend-btn-secondary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
 }
 
-.recommend-btn:active {
+.recommend-btn-secondary:active {
     transform: translateY(0) scale(0.97);
-}
-
-.recommend-btn i {
-    font-size: 18px;
 }
 
 /* ============================================================
@@ -1322,11 +1187,6 @@ body {
     display: block;
 }
 
-@keyframes fadeInOverlay {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
 /* 浮窗主体 */
 .profile-popup {
     display: none;
@@ -1347,11 +1207,6 @@ body {
 
 .profile-popup.show {
     display: flex;
-}
-
-@keyframes popIn {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .profile-popup-header {
@@ -1388,15 +1243,12 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    min-height: 100px;
-    max-height: 40vh;
 }
 
 .profile-loading {
     text-align: center;
     color: var(--text-light);
-    padding: 20px;
-    font-size: 14px;
+    padding: 30px 0;
 }
 
 .profile-content {
@@ -1404,7 +1256,6 @@ body {
     line-height: 1.8;
     color: var(--text-primary);
     white-space: pre-wrap;
-    word-break: break-word;
 }
 
 .profile-popup-footer {
@@ -1412,81 +1263,114 @@ body {
     gap: 10px;
     padding: 12px 20px;
     border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
 }
 
 .profile-btn {
     flex: 1;
     padding: 8px 16px;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: all 0.2s ease;
 }
 
 .profile-btn-view {
-    background: var(--chat-bg);
-    color: var(--text-primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
 }
 
 .profile-btn-view:hover {
-    background: #e0e2e5;
+    box-shadow: 0 3px 12px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
 }
 
 .profile-btn-reset {
-    background: #fff0f0;
-    color: #ef4444;
+    background: #fee2e2;
+    color: #dc2626;
 }
 
 .profile-btn-reset:hover {
-    background: #ffe0e0;
+    background: #fecaca;
+    transform: translateY(-1px);
 }
 
 /* ============================================================
    输入区域
    ============================================================ */
 .input-area {
-    padding: 16px 24px 20px;
+    padding: 12px 20px 16px;
     background: white;
     border-top: 1px solid var(--border-color);
     flex-shrink: 0;
+}
+
+.recommend-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.recommend-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.recommend-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+}
+
+.recommend-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.recommend-btn i {
+    font-size: 14px;
 }
 
 .input-wrapper {
     display: flex;
     gap: 10px;
     align-items: flex-end;
-    background: var(--chat-bg);
-    border: 2px solid transparent;
-    border-radius: var(--radius-md);
-    padding: 4px;
-    transition: all 0.2s ease;
-}
-
-.input-wrapper:focus-within {
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .input-wrapper textarea {
     flex: 1;
-    padding: 10px 14px;
-    border: none;
-    background: transparent;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-family: inherit;
     resize: none;
     outline: none;
-    min-height: 24px;
-    max-height: 120px;
+    transition: border-color 0.2s, box-shadow 0.2s;
     line-height: 1.5;
-    color: var(--text-primary);
+    max-height: 120px;
+    background: #f8fafc;
+}
+
+.input-wrapper textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    background: white;
 }
 
 .input-wrapper textarea::placeholder {
@@ -1494,39 +1378,40 @@ body {
 }
 
 .input-wrapper button {
-    width: 42px;
-    height: 42px;
-    border: none;
+    width: 44px;
+    height: 44px;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white;
-    border-radius: var(--radius-sm);
+    border: none;
+    border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
-.input-wrapper button:hover:not(:disabled) {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+.input-wrapper button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
 }
 
-.input-wrapper button:active:not(:disabled) {
+.input-wrapper button:active {
     transform: scale(0.95);
 }
 
 .input-wrapper button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
 }
 
 .input-wrapper button i {
     font-size: 16px;
 }
 
-/* 快捷输入标签 */
 .input-tips {
     display: flex;
     gap: 8px;
@@ -1535,10 +1420,10 @@ body {
 }
 
 .tip {
-    padding: 5px 14px;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
+    padding: 4px 12px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
     font-size: 12px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -1547,185 +1432,84 @@ body {
 }
 
 .tip:hover {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+    color: var(--text-primary);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 /* ============================================================
-   响应式设计 - 手机端
+   响应式 - 移动端适配
    ============================================================ */
 @media (max-width: 768px) {
     body {
         padding: 0;
-        align-items: stretch;
     }
 
     .app-container {
         height: 100vh;
         height: 100dvh;
         border-radius: 0;
-        flex-direction: column;
     }
 
     .sidebar {
-        width: 100%;
-        padding: 12px 16px;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 6px;
-        flex-shrink: 0;
-    }
-
-    .sidebar-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 0;
-        width: 100%;
-    }
-
-    .logo {
-        width: 36px;
-        height: 36px;
-        margin: 0;
-        animation: none;
-    }
-
-    .logo::after {
         display: none;
-    }
-
-    .logo i {
-        font-size: 16px;
-    }
-
-    .sidebar-header h2 {
-        font-size: 14px;
-        white-space: nowrap;
-    }
-
-    .subtitle {
-        display: none;
-    }
-
-    .sidebar-info {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 4px;
-        flex: none;
-        width: 100%;
-    }
-
-    .info-card {
-        padding: 6px 10px;
-        flex: 1;
-        min-width: 80px;
-        gap: 6px;
-        border-left-width: 2px;
-    }
-
-    .info-card i {
-        font-size: 12px;
-        width: 16px;
-    }
-
-    .info-card span {
-        font-size: 11px;
-    }
-
-    .sidebar-footer {
-        display: none;
-    }
-
-    .main-content {
-        min-height: 0;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
     }
 
     .chat-header {
         padding: 12px 16px;
-        flex-shrink: 0;
     }
 
     .chat-box {
         padding: 16px;
-        gap: 14px;
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .message {
-        max-width: 92%;
-    }
-
-    .bubble {
-        padding: 12px 14px;
-        font-size: 14px;
-        line-height: 1.6;
+        max-width: 90%;
     }
 
     .input-area {
         padding: 10px 12px 14px;
-        flex-shrink: 0;
     }
 
-    .input-wrapper textarea {
-        font-size: 16px;
-        padding: 8px 10px;
+    .recommend-popup {
+        width: 96vw;
+        max-height: 90vh;
     }
 
-    .input-tips {
-        gap: 5px;
-        margin-top: 8px;
+    .teacher-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
     }
 
-    .tip {
-        font-size: 11px;
-        padding: 4px 10px;
+    .profile-popup {
+        width: 94vw;
+    }
+
+    .profile-badge span {
+        display: none;
+    }
+
+    .profile-badge {
+        padding: 6px 10px;
+        margin-right: 6px;
+    }
+
+    .status-text {
+        display: none;
     }
 }
 
-/* 超小屏手机 (< 400px) */
-@media (max-width: 400px) {
-    .sidebar {
-        padding: 8px 10px;
-    }
-
-    .sidebar-header h2 {
-        font-size: 13px;
-    }
-
-    .info-card {
-        padding: 4px 8px;
-        min-width: 60px;
-    }
-
-    .info-card span {
-        font-size: 10px;
-    }
-
-    .chat-box {
+@media (max-width: 480px) {
+    .recommend-popup-body {
         padding: 12px;
-        gap: 10px;
     }
 
-    .message {
-        max-width: 95%;
+    .tcb-header {
+        padding: 12px 12px 8px;
     }
 
-    .bubble {
-        padding: 10px 12px;
-        font-size: 13px;
-    }
-
-    .input-area {
-        padding: 8px 10px 12px;
+    .tcb-body {
+        padding: 0 12px 12px;
     }
 }
